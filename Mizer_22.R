@@ -8,12 +8,12 @@ names(ugh)[1] = "species"
 species_params<-ugh
 params <- newMultispeciesParams(species_params,interaction = NULL)
 include_critical = TRUE
-time_torun_simulation = 50
+dev.new()
+time_torun_simulation = 100
 sim <- project(params, effort = 0, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
 plot(sim, include_critical = TRUE)
 
-total_biomass_size_spectrum = XX
-total_Biomass_background = YY
+
 
 
 CB_14 = read.csv("c:/users/derekt/desktop/CB_14.csv")
@@ -72,12 +72,13 @@ runModel <- function(rMax)
   return(sse_final)
 }
 
-time_torun_simulation = 50
 
 aa = optim(new_Rmax, runModel)
 
 params@species_params$R_max = aa$par
 sim <- project(params, effort = 0, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
+
+dev.new()
 plot(sim, include_critical = TRUE)
 
 
