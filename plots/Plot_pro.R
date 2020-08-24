@@ -43,7 +43,7 @@ dev.new()
 axis_lim = max(c(observe_w$pro, mizer_w$pro))
 plot(observe_w$pro, mizer_w$pro, col = rainbow(length(mizer_w$pro)), pch = 19, xlim = c(0, axis_lim), ylim = c(0, axis_lim), xlab = "Observed proportion", ylab = "Modelled proportion")
 abline(a = 0, b = 1, lty = 2)
-legend("top", legend = as.character(observe_w$ï..species), col = rainbow(length(mizer_w$pro)), pch = 19, cex = 0.75)
+legend("top", legend = as.character(observe_w$Ã¯..species), col = rainbow(length(mizer_w$pro)), pch = 19, cex = 0.75)
 
 
 # Alternative plots
@@ -53,7 +53,7 @@ par(mfcol = c(1,3))
 y_locs = seq(length(mizer_w$pro),1)
 a = sort(mizer_w$pro, decreasing = TRUE, index.return = TRUE)
 plot(a$x, y_locs, xlim = c(0, axis_lim), xlab = "Modelled proportion", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
-#axis(side = 2, at = y_locs, cex.axis = 0.6, labels =  mizer_w$ï..species[a$ix], las = 1)
+#axis(side = 2, at = y_locs, cex.axis = 0.6, labels =  mizer_w$Ã¯..species[a$ix], las = 1)
 
 #par(mar = c(5,5,4,2))
 plot(observe_w$pro[a$ix], y_locs, xlim = c(0, axis_lim), xlab = "Observed proportion", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
