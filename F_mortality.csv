@@ -1,0 +1,19 @@
+﻿Species,Stock_ID,average F,lower limit,upper limit,how f was calculated
+HADDOCK,HAD3LNO,0.016422208,0.001554404,0.074123989,used exploitation rate from ram database
+,HAD4X5Y,0.120269278,0.090460526,0.162531017,used exploitation rate from ram database
+REDFISH UNSEPARATED,REDFISHSPP3LN,0.006625,0.002,0.018,ram f values
+,REDFISHSPP3M,0.156685714,0.0463,0.265,ram f values
+,REDFISHSPP3Pn4RSTVn,NA,NA,NA,ram had no data at all for 2000=2010
+HERRING(ATLANTIC),HERR4VWX,0.173727273,0.131,0.247,used exploitation rate from ram database
+SILVER HAKE,SHAKE4VWX,0.180181818,0.101,0.241,ram f values
+COD(ATLANTIC),COD4TVn,0.022363636,0.002,0.039,ram f values
+,COD4VsW,0.00806,0.00634,0.0102,used exploitation rate from ram database
+NORTHERN SAND LANCE,NA,0,0,0,not a fished species
+HALIBUT(ATLANTIC),ATHAL3NOPs4VWX5Zc,0.196181818,0.123,0.3,ram f values
+SPINY DOGFISH,SDOG4VWX5,0.065976111,0.029036036,0.093957871,calculated using NAFO catch data and Ram legacy SSB data
+YELLOWTAIL FLOUNDER,YELL3LNO,0.104111111,0.008,0.147,ram f values
+AMERICAN PLAICE,AMPL4VWX,0.075991801,0.020924171,0.128470588,calculated using NAFO catch data and Ram legacy SSB data
+WHITE HAKE,WHAKE4VWX5,NA,NA,NA,ram had no data at all for 2000=2010
+WITCH FLOUNDER,WITFLOUN4RST,0.117554545,0.0494,0.17,used exploitation rate from ram database
+,WITFLOUN3Ps,NA,NA,NA,ram had no data at all for 2000=2010
+"TURBOT,GREENLAND HALIBUT",GHAL4RST,0.105481158,0.047583643,0.131365314,ram f values
