@@ -9,104 +9,80 @@
 library(mizer)
 library(tidyverse)
 
-#let's start with the species with ram data
-#import incl_fish_2.csv
-species_params = incl_fish_2
+# CHANGE THIS DIRECTORY TO POINT TO GITHUB REPOSITORY
+setwd("c:/users/derekt/work/isabellefishery")
 
+# Load helper functions
+source("calculate_sse.R")
+source("run_model.R")
+
+# Fixed parameters
+time_torun_simulation = 10
+
+#let's start with the species with RAM data
+# fishing mortality values are averaged from 2000-2010
+species_params = read.csv("species_params_species_with_ram_SSB.csv")
+names(species_params)[1] = "species"
+
+# Set mizer parameters matrix
 params <- newMultispeciesParams(species_params, kappa = 1e11)
 
-params@gear_params
+# This will display fishing parameters
+#params@gear_params
 
 # replace catchabilty with you time-averaged fishing mortality estimates 
-
 params@gear_params$catchability<-species_params$fishing_mortality
 
 # re-set the params object
-
 params<-setParams(params)
 
 # project the params using an effort of 1, later we can use this as a multiplier
-# run with fishing
-sim <- project(params, t_max = 100, effort = 1)
+# run with fishing. This is not including parameter optimization.
+#sim <- project(params, t_max = 100, effort = 1)
+#plot(sim)
 
-plot(sim)
 #ok now fishing is in appropriate params format
 #now we need to optimize rmax for the species we have ram data for
-
-time_torun_simulation = 10
+# Create a before simulation to compare to post-optimisation
 sim <- project(params, effort= 1, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
 plot(sim, include_critical = TRUE)
 
 
-#import ram_cb_14.csv
-Mean_CB_sub = aggregate(SSB.g~sjob.COMM, ram_cb_14, mean)
-
-
+# Import the RAM legacy SSB 
+temp_file = read.csv("species_biomass_ram.csv")
+names(temp_file)[1] = "sjob.COMM"
+mean_SSB_2000_2010 = aggregate(SSB.g~sjob.COMM, temp_file, mean)
 
 # Extract complete species parameter matrix
 params@species_params
 
-# Create vector with new Rmax values
+# Create vector with new Rmax values to optimize
 new_Rmax = rep(8.26e+09,length(params@species_params$R_max))
 
 # Put new vector back into species parameters
 params@species_params$R_max = new_Rmax
 
+# This code extracts the final year of biomass
+#biomasses_through_time = getBiomass(sim)
+#final_biomasses = biomasses_through_time[time_torun_simulation,]
+#sse <- calculate_sse(mean_SSB_2000_2010, final_biomasses)
 
-biomasses_through_time = getBiomass(sim)
-final_biomasses = biomasses_through_time[time_torun_simulation,]
-
-
-
-calculate_sse <- function(Mean_CB_sub, final_biomasses)
-{
-  total_sse = 0
-  
-  for (ii in 1:length(final_biomasses))
-  {
-    row_obs = which(Mean_CB_sub[,1] == names(final_biomasses)[ii])
-    sum_sq_temp = (final_biomasses[ii] - Mean_CB_sub[row_obs,2])^2
-    # print(sum_sq_temp)
-    total_sse = total_sse + as.numeric(sum_sq_temp)
-    # print(total_sse)
-  }
-  
-  return(total_sse)
-}
-
-sse <- calculate_sse(Mean_CB_sub, final_biomasses)
-
-runModel <- function(rMax)
-{
-  # Put new vector back into species parameters
-  params@species_params$R_max = rMax
-  
-  # Run the model
-  sim <- project(params, effort = 1, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
-  
-  # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
-  final_biomasses = biomasses_through_time[time_torun_simulation,]
-  
-  # Calculate SSE
-  sse_final <- calculate_sse(Mean_CB_sub, final_biomasses)
-  return(sse_final)
-}
-
-
+# Estimate Rmax parameters
 aa = optim(new_Rmax, runModel)
 
+# Run model with optimized Rmax parameters, extract and plot final biomass
 params@species_params$R_max = aa$par
 sim <- project(params, effort = 1, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
 
-
+# Plot model results
 dev.new()
 plot(sim, include_critical = TRUE)
 x =params@species_params
 
+
+
 ###################################################################################################
 #now we do it with all the species
-
 
 
 #import incl_fish.csv
@@ -141,7 +117,7 @@ plot(sim, include_critical = TRUE)
 
 #import CB_14.csv
 CB_sub = subset(CB_14, year > 1999 & year < 2011)
-Mean_CB_sub = aggregate(sjob.TOTWGT~sjob.COMM, CB_14, mean)
+mean_SSB_2000_2010 = aggregate(sjob.TOTWGT~sjob.COMM, CB_14, mean)
 
 
 
@@ -160,40 +136,8 @@ final_biomasses = biomasses_through_time[time_torun_simulation,]
 
 
 
-calculate_sse <- function(Mean_CB_sub, final_biomasses)
-{
-  total_sse = 0
-  
-  for (ii in 1:length(final_biomasses))
-  {
-    row_obs = which(Mean_CB_sub[,1] == names(final_biomasses)[ii])
-    sum_sq_temp = (final_biomasses[ii] - Mean_CB_sub[row_obs,2])^2
-    # print(sum_sq_temp)
-    total_sse = total_sse + as.numeric(sum_sq_temp)
-    # print(total_sse)
-  }
-  
-  return(total_sse)
-}
 
-sse <- calculate_sse(Mean_CB_sub, final_biomasses)
-
-runModel <- function(rMax)
-{
-  # Put new vector back into species parameters
-  params@species_params$R_max = rMax
-  
-  # Run the model
-  sim <- project(params, effort = 1, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
-  
-  # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
-  final_biomasses = biomasses_through_time[time_torun_simulation,]
-  
-  # Calculate SSE
-  sse_final <- calculate_sse(Mean_CB_sub, final_biomasses)
-  return(sse_final)
-}
+sse <- calculate_sse(mean_SSB_2000_2010, final_biomasses)
 
 
 aa = optim(new_Rmax, runModel)
@@ -205,6 +149,7 @@ sim <- project(params, effort = 1, t_max = time_torun_simulation) #Change t_max 
 
 plot(sim, include_critical = TRUE)
 y=params@species_params
+
 
 ############################################################################################
 #ok now we need to merge these two datasets

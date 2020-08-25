@@ -5,6 +5,13 @@
 setwd("c:/users/derekt/work/IsabelleFishery/")
 library(mizer)
 
+# CHANGE THIS DIRECTORY TO POINT TO GITHUB REPOSITORY
+setwd("c:/users/derekt/work/isabellefishery")
+
+# Load helper functions
+source("calculate_sse.R")
+source("run_model.R")
+
 # Global parameters
 time_torun_simulation_for_optimization = 10
 time_torun_simulation_for_checking_persistence = 100
@@ -40,42 +47,11 @@ new_Rmax = rep(8.26e+09,length(params@species_params$R_max))
 params@species_params$R_max = new_Rmax
 
 
-# Calculate the sum of squared error between the observed trawl survey catches and modelled data
-calculate_sse <- function(Mean_CB_sub, final_biomasses)
-{
-  total_sse = 0
 
-  for (ii in 1:length(final_biomasses))
-  {
-    row_obs = which(Mean_CB_sub[,1] == names(final_biomasses)[ii])
-    sum_sq_temp = (final_biomasses[ii] - Mean_CB_sub[row_obs,2])^2
-    # print(sum_sq_temp)
-    total_sse = total_sse + as.numeric(sum_sq_temp)
-    # print(total_sse)
-  }
-  
-  return(total_sse)
-}
 
 # sse <- calculate_sse(Mean_CB_sub, final_biomasses)
 
-# Function to run the model with specific rMax input parameters for optimization
-runModel <- function(rMax)
-{
-  # Put new vector back into species parameters
-  params@species_params$R_max = rMax
-  
-  # Run the model
-  sim <- project(params, effort = 0, t_max = time_torun_simulation_for_optimization) #Change t_max to determine how many years the model runs for
 
-  # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
-  final_biomasses = biomasses_through_time[time_torun_simulation_for_optimization,]
-  
-  # Calculate SSE
-  sse_final <- calculate_sse(Mean_CB_sub, final_biomasses)
-  return(sse_final)
-}
 
 
 # Run the optimization process

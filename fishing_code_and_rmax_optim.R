@@ -1,6 +1,14 @@
 library(mizer)
 library(tidyverse)
 
+
+# CHANGE THIS DIRECTORY TO POINT TO GITHUB REPOSITORY
+setwd("c:/users/derekt/work/isabellefishery")
+
+# Load helper functions
+source("calculate_sse.R")
+
+
 # read in data (made up F values, just to show how to set up)
 
 species_params<-read.csv("incl_fish.csv")
@@ -65,40 +73,9 @@ final_biomasses = biomasses_through_time[time_torun_simulation,]
 
 
 
-calculate_sse <- function(Mean_CB_sub, final_biomasses)
-{
-  total_sse = 0
-  
-  for (ii in 1:length(final_biomasses))
-  {
-    row_obs = which(Mean_CB_sub[,1] == names(final_biomasses)[ii])
-    sum_sq_temp = (final_biomasses[ii] - Mean_CB_sub[row_obs,2])^2
-    # print(sum_sq_temp)
-    total_sse = total_sse + as.numeric(sum_sq_temp)
-    # print(total_sse)
-  }
-  
-  return(total_sse)
-}
 
 sse <- calculate_sse(Mean_CB_sub, final_biomasses)
 
-runModel <- function(rMax)
-{
-  # Put new vector back into species parameters
-  params@species_params$R_max = rMax
-  
-  # Run the model
-  sim <- project(params, effort = 1, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
-  
-  # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
-  final_biomasses = biomasses_through_time[time_torun_simulation,]
-  
-  # Calculate SSE
-  sse_final <- calculate_sse(Mean_CB_sub, final_biomasses)
-  return(sse_final)
-}
 
 
 aa = optim(new_Rmax, runModel)
