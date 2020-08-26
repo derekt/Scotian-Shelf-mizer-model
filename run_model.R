@@ -14,6 +14,6 @@ runModel <- function(rMax)
   final_biomasses = biomasses_through_time[time_torun_simulation,]
   
   # Calculate SSE
-  sse_final <- calculate_sse(Mean_CB_sub, final_biomasses)
+  sse_final <- calculate_sse(Mean_survey_sub, final_biomasses)
   return(sse_final)
 }
