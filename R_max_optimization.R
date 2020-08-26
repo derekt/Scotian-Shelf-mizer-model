@@ -49,7 +49,7 @@ params@species_params$R_max = new_Rmax
 
 
 
-# sse <- calculate_sse(Mean_CB_sub, final_biomasses)
+# sse <- calculate_sse(Mean_survey_sub, final_biomasses)
 
 
 
