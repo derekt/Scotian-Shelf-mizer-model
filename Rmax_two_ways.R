@@ -85,8 +85,9 @@ x =params@species_params
 #now we do it with all the species
 
 
-#import incl_fish.csv
-species_params = incl_fish
+#import species infor including fishing
+#This includes all species and not just the ones that had Ram SSB data
+species_params = 	species_params_with_fishing.csv
 # set up the params object
 
 params <- newMultispeciesParams(species_params, kappa = 1e11)
@@ -115,9 +116,11 @@ plot(sim, include_critical = TRUE)
 
 
 
-#import CB_14.csv
-CB_sub = subset(CB_14, year > 1999 & year < 2011)
-mean_SSB_2000_2010 = aggregate(sjob.TOTWGT~sjob.COMM, CB_14, mean)
+#import survey weight data
+survey_weight = read.csv("survey_species_mean_annual_weight.csv")
+# Subset the catch data to get the mean catches between 2000 and 2010
+survey_sub = subset(survey_weight, year > 1999 & year < 2011)
+Mean_survey_sub = aggregate(sjob.TOTWGT~sjob.COMM, survey_sub, mean)
 
 
 
@@ -177,15 +180,9 @@ species_params = joint
 
 params <- newMultispeciesParams(species_params, kappa = 1e11)
 
-# have a look at the default fishing params - you can either use effort or catchablity to set up these fihsing moratlities
-# for now because they are species specific catchability is easier
-# the deafult size selectivity is a "knife-edge"
-# more info  here:https://sizespectrum.org/mizer/reference/setFishing.html
-
 params@gear_params
 
 # replace catchabilty with you time-averaged fishing mortality estimates 
-# (mine are made up as couldn't cut and past yours :)
 
 
 params@gear_params$catchability<-species_params$fishing_mortality
@@ -200,8 +197,6 @@ sim <- project(params, t_max = 100, effort = 1)
 
 plot(sim)
 
-# you can see on the plat that the fishing mortalitys for all species above the minimu size fished is 0.5
-# so you can replace with your values now
 
 time_torun_simulation = 10
 sim <- project(params, effort= 1, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
