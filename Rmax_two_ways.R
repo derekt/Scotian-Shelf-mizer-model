@@ -65,7 +65,8 @@ params@species_params$R_max = new_Rmax
 # This code extracts the final year of biomass
 #biomasses_through_time = getBiomass(sim)
 #final_biomasses = biomasses_through_time[time_torun_simulation,]
-#sse <- calculate_sse(mean_SSB_2000_2010, final_biomasses)
+
+sse <- calculate_sse(mean_SSB_2000_2010, final_biomasses)
 
 # Estimate Rmax parameters
 aa = optim(new_Rmax, runModel)
@@ -140,7 +141,7 @@ final_biomasses = biomasses_through_time[time_torun_simulation,]
 
 
 
-sse <- calculate_sse(mean_SSB_2000_2010, final_biomasses)
+sse <- calculate_sse(Mean_survey_sub, final_biomasses)
 
 
 aa = optim(new_Rmax, runModel)
