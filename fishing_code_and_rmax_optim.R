@@ -11,7 +11,7 @@ source("calculate_sse.R")
 
 # read in data (made up F values, just to show how to set up)
 
-species_params<-read.csv("incl_fish.csv")
+species_params<-read.csv("species_params_with_fishing.csv")
 
 # set up the params object
 # I have just used deafult values here - you need to check
@@ -52,10 +52,12 @@ plot(sim, include_critical = TRUE)
 
 
 
-CB_14 = read.csv("c:/users/derekt/desktop/CB_14.csv")
-CB_sub = subset(CB_14, year > 1999 & year < 2011)
-Mean_CB_sub = aggregate(sjob.TOTWGT~sjob.COMM, CB_sub, mean)
+# Read the DFO survey catch data
+survey_weight = read.csv("survey_species_mean_annual_weight.csv")
 
+# Subset the catch data to get the mean catches between 2000 and 2010
+survey_sub = subset(survey_weight, year > 1999 & year < 2011)
+Mean_survey_sub = aggregate(sjob.TOTWGT~sjob.COMM, survey_sub, mean)
 
 
 # Extract complete species parameter matrix
@@ -74,7 +76,7 @@ final_biomasses = biomasses_through_time[time_torun_simulation,]
 
 
 
-sse <- calculate_sse(Mean_CB_sub, final_biomasses)
+sse <- calculate_sse(Mean_survey_sub, final_biomasses)
 
 
 
