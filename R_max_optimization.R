@@ -17,16 +17,16 @@ time_torun_simulation_for_optimization = 10
 time_torun_simulation_for_checking_persistence = 100
 
 # Read in the species life history parameters from the .csv
-ugh<-read.csv("ugh.csv", header = TRUE)
-names(ugh)[1] = "species"
-species_params<-ugh
+sp<-read.csv("species_params_no_fish.csv", header = TRUE)
+names(sp)[1] = "species"
+species_params<-sp
 
 # Read the DFO survey catch data
-CB_14 = read.csv("c:/users/derekt/desktop/CB_14.csv")
+survey_weight = read.csv("survey_species_mean_annual_weight.csv")
 
 # Subset the catch data to get the mean catches between 2000 and 2010
-CB_sub = subset(CB_14, year > 1999 & year < 2011)
-Mean_CB_sub = aggregate(sjob.TOTWGT~sjob.COMM, CB_sub, mean)
+survey_sub = subset(survey_weight, year > 1999 & year < 2011)
+Mean_survey_sub = aggregate(sjob.TOTWGT~sjob.COMM, survey_sub, mean)
 
 # Set up the multispecies parameter matrix
 params <- newMultispeciesParams(species_params,interaction = NULL)
