@@ -32,13 +32,13 @@ Mean_survey_sub = aggregate(sjob.TOTWGT~sjob.COMM, survey_sub, mean)
 params <- newMultispeciesParams(species_params,interaction = NULL)
 
 # Run the simulation once with default parameters
-#sim <- project(params, effort = 0, t_max = time_torun_simulation_for_optimization) #Change t_max to determine how many years the model runs for
-#plot(sim, include_critical = TRUE)
+sim <- project(params, effort = 0, t_max = time_torun_simulation_for_optimization) #Change t_max to determine how many years the model runs for
+plot(sim, include_critical = TRUE)
 # Extract complete species parameter matrix
-#params@species_params
+params@species_params
 # Extract final biomasses
-#biomasses_through_time = getBiomass(sim)
-#final_biomasses = biomasses_through_time[time_torun_simulation_for_optimization,]
+biomasses_through_time = getBiomass(sim)
+final_biomasses = biomasses_through_time[time_torun_simulation_for_optimization,]
 
 # Create vector with new Rmax values - this is the parameter over which we will be optimizing
 new_Rmax = rep(8.26e+09,length(params@species_params$R_max))

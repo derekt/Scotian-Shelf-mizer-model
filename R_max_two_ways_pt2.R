@@ -63,6 +63,10 @@ new_Rmax = rep(8.26e+09,length(params@species_params$R_max))
 # Put new vector back into species parameters
 params@species_params$R_max = new_Rmax
 
+
+# re-set the params object
+params<-setParams(params)
+
 # This code extracts the final year of biomass
 #biomasses_through_time = getBiomass(sim)
 #final_biomasses = biomasses_through_time[time_torun_simulation,]
