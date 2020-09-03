@@ -1,3 +1,4 @@
+<<<<<<< HEAD:.Rhistory
 geom_tile(aes(fill = Sp)) +
 #     scale_fill_gradient2(low = 'royalblue1', mid = "yellow1",  high = 'red', limits = c(plot_limits[1], plot_limits[2]),oob = squish, guide = guide_colorbar(label.position = "left", title.hjust = 1, title = expression(paste('kg C m' ^ '-2'))),
 # scale_fill_gradient2(low = 'royalblue1', mid = "yellow1",  high = 'red', limits = c(plot_limits[1], plot_limits[2]),oob = squish, guide = guide_colorbar(label.position = "left", title.hjust = 1),
@@ -32,6 +33,8 @@ theme_opts
 } else
 {
 r1_gg <- ggplot(r.1.df, aes(x=x, y=y)) +
+=======
+>>>>>>> 8b7ed88b2d60698157abfeee97b4fac1a3794a06:old/Rhistory
 geom_tile(aes(fill = Sp)) +
 #     scale_fill_gradient2(low = 'royalblue1', mid = "yellow1",  high = 'red', limits = c(plot_limits[1], plot_limits[2]),oob = squish, guide = guide_colorbar(label.position = "left", title.hjust = 1, title = expression(paste('kg C m' ^ '-2'))),
 # scale_fill_gradient2(low = 'royalblue1', mid = "yellow1",  high = 'red', limits = c(plot_limits[1], plot_limits[2]),oob = squish, guide = guide_colorbar(label.position = "left", title.hjust = 1),
@@ -425,61 +428,98 @@ params"w"
 params@w
 sim <- project(params, t_max = 50, effort = 0)
 plot(sim)
-#This is the code to run the multispecies model.
-#Ugh data frame includes the 14 fish species from the top 20 species
+library(data.table)
+?data.table
+library(flights)
+mpg
+load(mpg)
+library(ggplot2)
+mpg
+library(data.table)
+xx = as.data.table(mpg)
+class(mpg)
+class(xx)
+xx
+mpg
+mpg <- order(mpg, by = cty)
+mpg <- order(mpg, by = mpg$cty)
+mpg[order(model, -displ)]
+xx[order(model, -displ)]
+ans <- xx[manufacturer = "toyota", .(cyl = mean(cyl), hwy = mean(hwy))]
+ans <- xx[manufacturer == "toyota", .(cyl = mean(cyl), hwy = mean(hwy))]
+ans
+mean(mpg$cyl[mpg$manufacturer == "toyota"])
+ans <- xx[manufacturer == "toyota", .(cyl = mean(cyl)]
+ans <- xx[manufacturer == "toyota", .(cyl = mean(cyl))]
+xx[manufacturer == "toyota", .N]
+dim(xx[manufacturer == "toyota"])
+ans <- xx[,.(.N),by = .(manufacturer)]
+ans
+ans <- xx[,.N,by = .(manufacturer)]
+ans
+class(ans)
+input <- if (file.exists("flights14.csv")) {
+"flights14.csv"
+} else {
+"https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv"
+}
+flights <- fread(input)
+flights
+library(data.table)
+input <- if (file.exists("flights14.csv")) {
+"flights14.csv"
+} else {
+"https://raw.githubusercontent.com/Rdatatable/data.table/master/vignettes/flights14.csv"
+}
+flights <- fread(input)
+flights
+dim(flights)
+ans <- flights[order(origin, -dest)]
+head(ans)
+xx = as.data.frame(flights)
+]
+# Sort by vector name [z] then [x]
+dataframe[
+with(dataframe, order(z, x)),
+]
+ans2<-xx[with(xx, order("origin", "dest"))]
+head(ans2)
+ans2<-xx[with(xx, order("origin", "dest")),]
+head(ans2)
+dim(ans2)
+dim(xx)
+ans2<-xx[with(xx, order("origin")),]
+head(ans2)
+ans2<-xx[with(xx, order(xx$origin, -xx$dest)),]
+ans2<-xx[with(xx, order(xx$origin, -xx$dest)),]
+ans2<-xx[with(xx, order(xx$origin)),]
+head(ans2)
+ans <- flights[order(origin)]
+head(ans)
+vignette(data.table)
+"datatable-keys-fast-subset"
+?data.table
+vignette(package="data.table")
+vignette("datatable-reshape")
+vignette("datatable-importing")
+vignette("datatable-reference-semantics             Reference semantics (source, html)
+")
+vignette("datatable-reference-semantics")
+vignette("datatable-keys-fast-subset")
+vignette("datatable-secondary-indices-and-auto-indexing")
+vignette("datatable-benchmarking")
+vignette("datatable-reference-semantics ")
+vignette("datatable-reference-semantics")
+vignette("datatable-sd-usage")
+log(0.2)
+exp(0.2)
+log(1.2)
+log(2.5)
 setwd("c:/users/derekt/work/IsabelleFishery/")
-library(mizer)
-ugh<-read.csv("ugh.csv", header = TRUE)
-names(ugh)[1] = "species"
-species_params<-ugh
-params <- newMultispeciesParams(species_params,interaction = NULL)
-include_critical = TRUE
+mizer_w = read.csv("mizer_w.csv")
+observe_w = read.csv("observe_w.csv")
 dev.new()
-time_torun_simulation = 100
-sim <- project(params, effort = 0, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
-plot(sim, include_critical = TRUE)
-CB_14 = read.csv("c:/users/derekt/desktop/CB_14.csv")
-CB_sub = subset(CB_14, year > 1999 & year < 2011)
-Mean_CB_sub = aggregate(sjob.TOTWGT~sjob.COMM, CB_sub, mean)
-# Extract complete species parameter matrix
-params@species_params
-# Create vector with new Rmax values
-new_Rmax = rep(8.26e+09,length(params@species_params$R_max))
-# Put new vector back into species parameters
-params@species_params$R_max = new_Rmax
-biomasses_through_time = getBiomass(sim)
-final_biomasses = biomasses_through_time[time_torun_simulation,]
-calculate_sse <- function(Mean_CB_sub, final_biomasses)
-{
-total_sse = 0
-for (ii in 1:length(final_biomasses))
-{
-row_obs = which(Mean_CB_sub[,1] == names(final_biomasses)[ii])
-sum_sq_temp = (final_biomasses[ii] - Mean_CB_sub[row_obs,2])^2
-# print(sum_sq_temp)
-total_sse = total_sse + as.numeric(sum_sq_temp)
-# print(total_sse)
-}
-return(total_sse)
-}
-sse <- calculate_sse(Mean_CB_sub, final_biomasses)
-runModel <- function(rMax)
-{
-# Put new vector back into species parameters
-params@species_params$R_max = rMax
-# Run the model
-sim <- project(params, effort = 0, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
-# Extract final biomasses
-biomasses_through_time = getBiomass(sim)
-final_biomasses = biomasses_through_time[time_torun_simulation,]
-# Calculate SSE
-sse_final <- calculate_sse(Mean_CB_sub, final_biomasses)
-return(sse_final)
-}
-aa = optim(new_Rmax, runModel)
-params@species_params$R_max = aa$par
-sim <- project(params, effort = 0, t_max = time_torun_simulation) #Change t_max to determine how many years the model runs for
-dev.new()
+<<<<<<< HEAD:.Rhistory
 plot(sim, include_critical = TRUE)
 ls()
 save.image()
@@ -510,3 +550,33 @@ params<-setParams(params)
 # run with fishing
 sim <- project(params, t_max = 100, effort = 1)
 plot(sim)
+=======
+axis_lim = max(c(observe_w$pro, mizer_w$pro))
+plot(observe_w$pro, mizer_w$pro, col = rainbow(length(mizer_w$pro)), pch = 19, xlim = c(0, axis_lim), ylim = c(0, axis_lim), xlab = "Observed proportion", ylab = "Modelled proportion")
+abline(a = 0, b = 1, lty = 2)
+legend("top", legend = as.character(observe_w$ï..species), col = rainbow(length(mizer_w$pro)), pch = 19, cex = 0.75)
+# Alternative plots
+dev.new(width=8, height=11)
+par(mfcol = c(1,3))
+#par(mar = c(5,9,4,2))
+y_locs = seq(length(mizer_w$pro),1)
+a = sort(mizer_w$pro, decreasing = TRUE, index.return = TRUE)
+plot(a$x, y_locs, xlim = c(0, axis_lim), xlab = "Modelled proportion", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
+#axis(side = 2, at = y_locs, cex.axis = 0.6, labels =  mizer_w$ï..species[a$ix], las = 1)
+#par(mar = c(5,5,4,2))
+plot(observe_w$pro[a$ix], y_locs, xlim = c(0, axis_lim), xlab = "Observed proportion", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
+plot(a$x - observe_w$pro[a$ix], y_locs, xlim = c(-axis_lim, axis_lim), xlab = "Modelled - observed", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
+abline(v = 0, lty = 2)
+# Alternative plots
+dev.new(width=8, height=11)
+par(mfcol = c(1,3))
+#par(mar = c(5,9,4,2))
+y_locs = seq(length(mizer_w$pro),1)
+a = sort(mizer_w$pro, decreasing = TRUE, index.return = TRUE)
+plot(a$x, y_locs, xlim = c(0, axis_lim), xlab = "Modelled proportion", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
+#axis(side = 2, at = y_locs, cex.axis = 0.6, labels =  mizer_w$ï..species[a$ix], las = 1)
+#par(mar = c(5,5,4,2))
+plot(observe_w$pro[a$ix], y_locs, xlim = c(0, axis_lim), xlab = "Observed proportion", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
+plot(a$x - observe_w$pro[a$ix], y_locs, xlim = c(-axis_lim, axis_lim), xlab = "Modelled - observed", ylab = "", yaxt = "n", pch = 19, col = rainbow(length(mizer_w$pro)))
+abline(v = 0, lty = 2)
+>>>>>>> 8b7ed88b2d60698157abfeee97b4fac1a3794a06:old/Rhistory

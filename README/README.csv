@@ -1,0 +1,20 @@
+﻿Folder,File name,Description,units,old file name
+,survey_species_mean_annual_weight.csv,The annual mean weight of the 13 most abundant species in the 2017 ESS DFO survey,kg,CB_14.csv
+,species_biomass_ram.csv,The annual SSB and total biomass data from Ram database of the 13 species of interest. ,mT and g,ram_cb_14.csv
+,species_params_with_fishing.csv,Species params with fishing mortality for all 13 species,,incl_fish.csv
+,species_params_species_with_ram_SSB.csv,Species params of the 9/13 species that had SSB estimates from 2000-2010 in the ram database. This file was used to try and optimize Rmax against SSB instead of survey biomass,,incl_fish_2.csv
+,ram_data_Fmortality.csv,Extracted fising mortality data of 13 species from ram database,,ram_data_Fmortality.csv
+,fishing_code_and_rmax_optim.R,This code needs to be used to get mizer to recognize the fishing mortality column in species params. The next part of the code optimizes Rmax.,,meeting_run.R
+,Rmax_two_ways.R,This code optimizes Rmax using two different sources of observed biomass. For 9 species it uses the SSB available from Ram database and for 3 species it uses the survey biomass,,Rmax_two_ways.R
+,R_max_optimization.R,This code is to optimize R max,,Mizer_22.R
+plots,Plot_mizer_v_real.R,This code is to make plots that look at how well mizer models the observed proportion of our 13 species of interest,,Plot_pro.R
+,mizer_w.csv,The final proportion of the 13 species after a 10 year optimization of Rmax ,,mizer_w.csv
+,observe_w.csv,"A subset of ""proportion_observe.csv"". It takes the mean values from 2000-2010 and finds the proportion of each species",,observe_w.csv
+,proportion_observe.csv,"Calculates annual proportion fo each of the 13 species to the total (sum mean weight of 13 species) from ""survey_species_mean_annual_weight.csv""",,proportion.csv
+old,stock_id.csv,The stock ID and NAFO division for ram leacy database information. Sometimes no information was available for our exact NAFO area so we had to use the nearest stock,,stock_id.csv
+,species_params_no_fish.csv,"This the the original species params we used to optimize Rmax before we added fishing. I can't think of a reason to use it now, but I'm keeping it anyway.",,ugh.csv
+,julia_example.R,Julia's code to add f mortality to species params,,julia_example.R
+,dummyfile.csv,,,dummyfile.csv
+,NAFOcatch.csv,The annual sum catch of each of the 13 species of interest in the ESS,,NAFOcatch.csv
+,Species_2000to2010_Mean_Weight.csv,"This is a subset of ""survey_species_mean_annual_weight.csv"". It averages the weight of each of the 13 species from 2000 to 2010",,CB_Mean.csv
+,F_mortality.csv,This file gives the average f mortality for each of the 13 species and explains how it was calculated.,,F_mortality.csv
