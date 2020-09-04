@@ -59,10 +59,13 @@ Let's read in the Scotian Shelf model parameters, stored in mizer.
 
 ```{r}
 # initial set up
+
+# only need to do the installations once.
+#install.packages("remotes")
+library(remotes)
+#remotes::install_github("sizespectrum/mizerExperimental")
 library(mizerExperimental)
-if (packageVersion("mizerExperimental") < "0.1.1.9005") {
-  remotes::install_github("sizespectrum/mizerExperimental")
-}
+
 library(tidyverse)
 library(ggplot2)
 library(plotly)
@@ -137,6 +140,13 @@ plot(sim)
 
 plotSpectra(sim,power=2,total = T)
 
+## compare with projectToSteady
+steadyparams <- projectToSteady(params, t_max = 100, return_sim = F)
+sim2 <- project(steadyparams, t_max = 100, effort =1)
+plot(sim2)
+plotSpectra(sim2,power=2,total = T)
+
+
 ```
 
 Species are coexisting. This is in part because we applied a stronger  Rmax effect for larger species. You can play with the above parameters but but it would take a lot of trial an error to achieve the right combination to get the biomass or catches similar to the observations.
@@ -146,6 +156,8 @@ Species are coexisting. This is in part because we applied a stronger  Rmax effe
 We could explore the effects further using Rshiny app, where we also have a plot of the biomass or catch data. First let's look at the basic diagnostics and tune kappa and erepro to make sure the feeding levels are high enough for each species and that biomasses coexist. 
 
 ```{r}
+# Optional
+# adjust Rmax and/or reproductive efficiency to examine whether improved steady state is achievable that way
 library(shiny)
 runApp("shiny-equilibrium")
 # is there a way to save the final chosen values?
@@ -163,31 +175,58 @@ Let's choose some values that enable the most species to coexist as a starting p
 This might take AWHILE. Go watch some Netflix.
 
 ```{r}
-# change kappa and erepro based on shiny epxloration
-  params@species_params$erepro[] <-1e-1
-  params <- setParams(params,kappa=10^(10.9))
+# # change kappa and erepro based on shiny exploration, set up initial values based on "close to" equilibrium values from above sim
+#   steadyparams@species_params$erepro[] <-1e-0
+#   params@initial_effort<-1
+#   params@initial_n<-sim@n[100,,]
+#   params@initial_n_pp<-sim@n_pp[100,]
+#   params <- setParams(params,kappa=10^(11))
 
 # define the initial parameters to send to optimisation code below
 
 # we need 9 Rmaxs, log10 scale
-vary <- log10(params@species_params$R_max)
+vary <- log10(steadyparams@species_params$R_max)
 #vary<-runif(10,3,12) # or use completley made up values, same for each species test for effects of initial values
+
+## set up the enviornment to keep the current state of the simulations
+state <- new.env(parent = emptyenv())
+state$params <-  steadyparams
 
 #the following getError function combines the steps of the optimisastion above - this time with the multispecies model and output the predicted size spectrum
 
 ## update below with project_steady and saving the state from each iteration
 
-getError <- function(vary,params=initparam,dat=params@species_params$SSB.g,data_type="SSB",env = state, tol = 0.1,timetorun=100) {
-  env$params@species_params$R_max[]<-10^vary[1:9]
-  sim <- projectToSteady(env$params, effort = 1, distance_func = distanceSSLogN,
-                    tol = tol, t_max = timetorun)
+getError <- function(vary,params=params,dat=params@species_params$SSB.g,data_type="SSB",env = state, tol = 0.1,timetorun=1) {
+  
+  #env$params@species_params$R_max[]<-10^vary[1:9]
+  params@species_params$R_max[]<-10^vary[1:9]
+  
+  params <- setParams(params)
+  # run to steady state and update params
+  # env$params<- projectToSteady(env$params, distance_func = distanceSSLogN,
+  #                 tol = tol, t_max = 200,return_sim = F)
+  params<- projectToSteady(params, distance_func = distanceSSLogN,
+                   tol = tol, t_max = 200,return_sim = F)
+  
+  # create sim object 
+   
+  sim <- project(params, effort = 1, t_max = timetorun) #Change t_max to determine how many years the model runs for
+  
+  # 
+  # sim <- project(env$params, effort = 1, t_max = timetorun) #Change t_max to determine how many years the model runs for
+  # 
+  # env$params <-sim@params
+  # 
+  
           ## what kind of data and output do we have?
           if (data_type=="SSB") {
           output <-getSSB(sim)[timetorun,]   #could change to getBiomass if using survey, also check units.
           }
+  
           if (data_type=="catch") {
          output <-getYield(sim)[timetorun,]/1e6 #### CHECK UNITS !! grams per year? the data are in tonnes per year so converting to tonnes.
           }
+  
   pred <- log(output)
   dat  <- log(dat)
 
@@ -205,41 +244,52 @@ getError <- function(vary,params=initparam,dat=params@species_params$SSB.g,data_
 
 ## test it
 
-initparams <- params
 
-err<-getError(vary,params,dat=params@species_params$SSB.g,data_type="SSB")
-#err<-getError(vary,params,dat=rep(100,12),data_type="biomass")
-#test
-err
+# err<-getError(vary,env$params,dat=params@species_params$SSB.g,data_type="SSB")
+# #err<-getError(vary,params,dat=rep(100,12),data_type="biomass")
+# #test
+# err
 
 
-state <- new.env(parent = emptyenv())
-state$params <-params
+# this time carry out optimisation, using optim(), with SSB
+vals<-optim(par=vary,getError,params=env$params,method ="L-BFGS-B",lower=c(rep(3,9)),upper= c(rep(20,9)))
 
-# this time carry out optimisation, using optim(), with catches
-vals<-optim(par=vary,getError,params=initparams,method ="L-BFGS-B",lower=c(rep(3,9)),upper= c(rep(20,9)))
+# abive seems to give very differnet estimates every time (not sure if issues is how I am using the state, projectToSetady, or optim)
+# could also try derivative free method, for non-smaooth surfaces:
+# install.packages("dfoptim")
+library(dfoptim)
 
-# could also try derivative free method:
-#library(dfoptim)
+vals<-nmkb(par=vary,fn=getError,params=steadyparams,lower=c(rep(1,9)),upper= c(rep(20,9)),tol=0.1)
+
+
+# comparsion of optimistaion methods
+library(optimx)
+
+vals<-optimx(par=vary,getError,params=env$params,lower=c(rep(3,9)),upper= c(rep(20,9)), method = c("BFGS", "Nelder-Mead"),
+control = list(trace = 6, follow.on=TRUE, maximize=FALSE))
+
+# try different fitting data?: could also try comparing with Alida's Biomass estimates?
+
+# save vals - may want to repeat this setp depending on diagnostics, after changing some parameters
+saveRDS(vals,"optimx_vals.RDS")
 
 # plug back into model
 # optim values:
-params@species_params$R_max <- 10^vals$par[1:9] 
+params@species_params$R_max<- 10^as.numeric(vals[1:9])
 # set the param object
 params<-setParams(params)
-sim <- project(params, effort = 1, t_max = 100, dt=0.1)
+sim <- project(params, effort = 1, t_max = 500, dt=0.1)
 plot(sim)
 
 # and check do species still coexist without fishing?
 sim_uf <- project(params, effort = 0, t_max = 500, dt=0.1)
 plot(sim_uf)
 
-# save vals - may want to repeat this setp depending on diagnostics, after changing some parameters
-saveRDS(vals,"optim_vals.RDS")
+
 
 # save params - may want to repeat this setp depending on diagnostics, after changing some parameters
-saveRDS(params,"optim_param.RDS")
-saveRDS(sim,"optim_sim.RDS")
+saveRDS(params,"optimx_param.RDS")
+saveRDS(sim,"optimx_sim.RDS")
 
 
 ```
