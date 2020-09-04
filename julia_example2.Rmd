@@ -252,15 +252,15 @@ getError <- function(vary,params=params,dat=params@species_params$SSB.g,data_typ
 
 
 # this time carry out optimisation, using optim(), with SSB
-vals<-optim(par=vary,getError,params=env$params,method ="L-BFGS-B",lower=c(rep(3,9)),upper= c(rep(20,9)))
+# vals<-optim(par=vary,getError,params=env$params,method ="L-BFGS-B",lower=c(rep(3,9)),upper= c(rep(20,9)))
+# 
+# # above seems to give very different estimates every time (not sure if issues is how I am using the state, projectToSetady, or optim)
+# # could also try derivative free method, for non-smaooth surfaces:
+# # install.packages("dfoptim")
+# library(dfoptim)
 
-# abive seems to give very differnet estimates every time (not sure if issues is how I am using the state, projectToSetady, or optim)
-# could also try derivative free method, for non-smaooth surfaces:
-# install.packages("dfoptim")
-library(dfoptim)
-
-vals<-nmkb(par=vary,fn=getError,params=steadyparams,lower=c(rep(1,9)),upper= c(rep(20,9)),tol=0.1)
-
+# vals<-nmkb(par=vary,fn=getError,params=steadyparams,lower=c(rep(1,9)),upper= c(rep(20,9)),tol=0.1)
+# 
 
 # comparsion of optimistaion methods
 library(optimx)
@@ -268,10 +268,13 @@ library(optimx)
 vals<-optimx(par=vary,getError,params=env$params,lower=c(rep(3,9)),upper= c(rep(20,9)), method = c("BFGS", "Nelder-Mead"),
 control = list(trace = 6, follow.on=TRUE, maximize=FALSE))
 
-# try different fitting data?: could also try comparing with Alida's Biomass estimates?
 
 # save vals - may want to repeat this setp depending on diagnostics, after changing some parameters
 saveRDS(vals,"optimx_vals.RDS")
+
+#could repeat above to improve the fit using these values as the starting point
+
+#try different fitting data?: could also try comparing with Alida's Biomass estimates?
 
 # plug back into model
 # optim values:
