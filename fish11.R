@@ -11,66 +11,46 @@ colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(
 species_params = read.csv("species_params_species_with_ram_SSB.csv")
 names(species_params)[1] = "species"
 
-
-#things I'm adding
-species_params = incl_fish_2
-params <- newMultispeciesParams(species_params, kappa = 1e11)
-
-
-params@gear_params$gear= params@gear_params$species
+selectivity_function <- function(w ,...)
+{
+  return(1)
+}
 
 
-
+# Set up gear params data fram
 gear_params <- 
-  data.frame(species_params, 
-             kappa = 1e11,
-             gear_params = params@gear_params,
-             #sel_func = "sigmoid_length",
-             #l25 =  c(7.6, 9.8, 8.7, 10.1, 11.5, 19.8, 16.4, 19.8, 11.5),
-             #l50 = c(8.1, 11.8, 12.2, 20.8, 17.0, 29.0, 25.8, 29.0, 17.0)
-             selectivity = array(1,c(9,9,100)))
+  data.frame(species = species_params$species,
+             gear = species_params$species,
+             sel_func = "selectivity_function")
 
+gear_params$catchability <- rep(1,dim(gear_params)[2])
 
-
-
-
+# Set up parameters data frame
 params <- newMultispeciesParams(species_params, 
                                 kappa = 1e11,
-                                gear_params = params@gear_params)
-
-params@gear_params$gear = params@gear_params$species
-
-#params<-setFishing(params, selectivity = array(1,c(9,9,100)), catchability = params@catchability)
+                                gear_params = gear_params)
 
 
+# Create a temporal effort matrix
 relative_effort <- sweep(f_history, 2, f_history["1995",],"/")
-
-
 initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
 relative_effort <- rbind(initial_effort, relative_effort)
 
+# Run the simulation
 sim<- project(params, effort = relative_effort, dt = 0.25)
 params@catchability
 params@gear_params$gear
 
-class(params@catchability)
+# Pseudo code for calculating SSE for time-series
+function optimize_time_series <- (ram_ssb, model_ssb)
+{
+  total_sse = 0
+  loop (species)
+  {
+    loop (year 1970:2010)
+    {
+      total_sse = total_sse + (ram_ssb(species, year) - model_ssb(species, year))^2
+    }
+  }
+}
 
-params@catchability<-diag(x=1,nrow=9,ncol=9)
-colnames(params@catchability)<-c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
-rownames(params@catchability)<-c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
-params@catchability
-
-
-params@selectivity<-diag(x=1,nrow=9,ncol=9)
-colnames(params@selectivity)<-c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
-rownames(params@selectivity)<-c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
-params@selectivity
-
-
-relative_effort <- sweep(f_history, 2, f_history["1995",],"/")
-
-
-initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
-relative_effort <- rbind(initial_effort, relative_effort)
-
-sim<- project(params, effort = relative_effort, dt = 0.25)
