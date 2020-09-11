@@ -42,8 +42,6 @@ params <- newMultispeciesParams(species_params,
 
 params@gear_params$gear = params@gear_params$species
 
-#params<-setFishing(params, selectivity = array(1,c(9,9,100)), catchability = params@catchability)
-
 
 relative_effort <- sweep(f_history, 2, f_history["1995",],"/")
 
