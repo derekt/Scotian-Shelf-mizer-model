@@ -107,8 +107,8 @@ aa = optim(new_Rmax, runModel)
 runModelMultiOptim <- function(initialParameterValues)
 {
   # Put new vector back into species params
-  params@species_params$R_max = initialParameterValues$rMax
-  params <- setParams(params, kappa = initialParameterValues$kappa_temp)
+  params@species_params$R_max = initialParameterValues[1:9]
+  params <- setParams(params, kappa = initialParameterValues[10])
   
   # Run the model
   sim <- project(params, effort = relative_effort)
@@ -123,7 +123,7 @@ runModelMultiOptim <- function(initialParameterValues)
 }
 
 # initial value for kappa
-kappa_temp = 1e^11
+kappa_temp = 1.0e11
 
 # Optimize rMax and kappa parameter estimates
-bb = optim(list(rMax = rMax, kappa_temp = kappa_temp), runModelMultiOptim)
+bb = optim(c(new_Rmax, kappa_temp), runModelMultiOptim)
