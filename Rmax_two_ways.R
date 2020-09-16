@@ -17,7 +17,7 @@ source("calculate_sse.R")
 source("run_model.R")
 
 # Fixed parameters
-time_torun_simulation = 10
+time_torun_simulation = 100
 
 #let's start with the species with RAM data
 # fishing mortality values are averaged from 2000-2010
@@ -68,8 +68,8 @@ params@species_params$R_max = new_Rmax
 
 sse <- calculate_sse(mean_SSB_2000_2010, final_biomasses)
 
-# Estimate Rmax parameters
-aa = optim(new_Rmax, runModel)
+# Estimate Rmax parameters, 
+aa = optim(new_Rmax, runModel, params@species_params$R_max, mean_SSB_2000_2010)
 
 # Run model with optimized Rmax parameters, extract and plot final biomass
 params@species_params$R_max = aa$par
