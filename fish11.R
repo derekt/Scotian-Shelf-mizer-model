@@ -39,7 +39,8 @@ row1995 = which(rownames(f_history) == "1995")
 
 # Create a temporal effort matrix
 relative_effort <- f_history #sweep(f_history, 2, f_history["1995",],"/")
-initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
+#initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
+initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 50, ncol = ncol(relative_effort), dimnames = list(1920:1969))
 relative_effort <- rbind(initial_effort, relative_effort)
 
 # Run the simulation
@@ -98,32 +99,52 @@ runModel <- function(rMax)
   sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
   return(sse_final)
 }
+aa
 
-# Optimize rMax parameter estimates
-aa = optim(new_Rmax, runModel)
+# Run model with optimized Rmax parameters, extract and plot biomasses
+params@species_params$R_max = aa$par
+sim <- project(params, effort = relative_effort) 
+
+# Plot model results
+dev.new()
+plot(sim, include_critical = TRUE)
+x =params@species_params
+
 
 
 # Run model inputting rMax and kappa
-runModelMultiOptim <- function(initialParameterValues)
-{
-  # Put new vector back into species params
-  params@species_params$R_max = initialParameterValues[1:9]
-  params <- setParams(params, kappa = initialParameterValues[10])
-  
-  # Run the model
-  sim <- project(params, effort = relative_effort)
-  
-  # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
-  
-  
-  # Calculate SSE
-  sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
-  return(sse_final)
-}
+# runModelMultiOptim <- function(initialParameterValues)
+# {
+#   # Put new vector back into species params
+#   params@species_params$R_max = initialParameterValues[1:9]
+#   params <- setParams(params, kappa = initialParameterValues[10])
+#   
+#   # Run the model
+#   sim <- project(params, effort = relative_effort)
+#   
+#   # Extract final biomasses
+#   biomasses_through_time = getBiomass(sim)
+#   
+#   
+#   # Calculate SSE
+#   sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
+#   return(sse_final)
+# }
 
 # initial value for kappa
 kappa_temp = 1.0e11
 
 # Optimize rMax and kappa parameter estimates
-bb = optim(c(new_Rmax, kappa_temp), runModelMultiOptim)
+#bb = optim(c(new_Rmax, kappa_temp), runModelMultiOptim, method = "L-BFGS-B", lower = rep(0,10))
+bb = optim(new_Rmax, runModel, method = "L-BFGS-B", lower = rep(0,9), control = list(trace = 4, maxit = 1000))
+
+
+# Run model with optimized Rmax parameters, extract and plot biomasses
+params <- setParams(params, kappa = initialParameterValues[9])
+params@species_params$R_max = bb$par
+sim <- project(params, effort = relative_effort) 
+
+# Plot model results
+dev.new()
+plot(sim, include_critical = TRUE)
+x =params@species_params
