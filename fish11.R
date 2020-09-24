@@ -57,7 +57,7 @@ params@gear_params$gear
 
 # Plot the results
 biomasses_through_time = getBiomass(sim)
-plot(sim)
+plot(sim, include_critical = TRUE)
 dev.new()
 
 
