@@ -1,7 +1,7 @@
 #Ok this script is to try and get time varying fishing mortality
 #We want to try and reproduce the cod collapse of the 1990s so that we can feel more confirdent in our model before we begin future projections
 
-
+library(optimParallel)
 library(mizer)
 setwd("c:/users/derekt/work/isabellefishery/")
 
@@ -14,9 +14,12 @@ species_params = read.csv("species_params_species_with_ram_SSB.csv")
 names(species_params)[1] = "species"
 
 # Finally, read in the time-varying SSB against which to compare the model
-ram_ssb = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total.csv", row.names = 1), "matrix")
+ram_ssb = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
 colnames(ram_ssb) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 ram_ssb <- ram_ssb[,1:9]
+
+# TEMPORARY
+ram_ssb <- ram_ssb / 1000
 
 # Note that there are two versions of many of the above, in grams and in other units. Make sure that the units are standardised.
 
@@ -47,7 +50,7 @@ row1995 = which(rownames(f_history) == "1995")
 # Create a temporal effort matrix
 relative_effort <- f_history #sweep(f_history, 2, f_history["1995",],"/")
 #initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
-initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 50, ncol = ncol(relative_effort), dimnames = list(1920:1969))
+initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 20, ncol = ncol(relative_effort), dimnames = list(1950:1969))
 relative_effort <- rbind(initial_effort, relative_effort)
 
 # Run the simulation over time with no selectivity
@@ -68,6 +71,9 @@ names(gear_params)[1] = "species"
 
 # This essentially runs the model without any species fished
 #gear_params[,4] = rep(1000000,9)
+
+#### TEMPORARY
+species_params[,5] = rep(0.8,9)
 
 # Set up parameters data frame. Very sensitive to the value of kappa
 params <- newMultispeciesParams(species_params, 
@@ -138,10 +144,13 @@ runModel <- function(rMax)
 
 aa = optim(new_Rmax, runModel, control = list(trace = 4, maxit = 1000))
 
+# c1 <- makeCluster(3)
+# setDefaultCluster(cl = c1)
+# aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", control = list(trace = 4, maxit = 1000))
+
 
 # Run model with optimized Rmax parameters, extract and plot biomasses
-params@species_params$R_max = aa$par
-sim <- project(params, effort = relative_effort) 
+
 
 # Plot model results
 dev.new()
