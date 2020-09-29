@@ -48,9 +48,8 @@ params <- newMultispeciesParams(species_params,
 row1995 = which(rownames(f_history) == "1995")
 
 # Create a temporal effort matrix
-relative_effort <- f_history #sweep(f_history, 2, f_history["1995",],"/")
-#initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
-initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 20, ncol = ncol(relative_effort), dimnames = list(1950:1969))
+relative_effort <- f_history
+initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
 relative_effort <- rbind(initial_effort, relative_effort)
 
 # Run the simulation over time with no selectivity
@@ -61,8 +60,6 @@ params@gear_params$gear
 # Plot the results
 biomasses_through_time = getBiomass(sim)
 plot(sim, include_critical = TRUE)
-dev.new()
-
 
 # Load the selectivity matrix for knife-edge selectivity
 fishing_type = read.csv("Mat_knife_edge_gear_params2.csv")
@@ -108,18 +105,11 @@ calculate_sse_time_series <- function(ram_ssb, model_ssb)
   # Loop through species
   for (species in 1:dim(model_ssb)[2])
   {
-        # Loop through years
-    for (biolyear in 1:dim(model_ssb)[1])
-    {
-      # Check to see if the empirical SSB is NA
-      if (is.na(ram_ssb[biolyear,species]))
-      {
-        
-      } else
-      {
-        total_sse = total_sse + (ram_ssb[biolyear, species] - model_ssb[biolyear, species])^2
-      }
-    }
+    not_na_years = !is.na(ram_ssb[, species])
+    
+    # Calculate sum of squares and add to the running total
+    total_sse = total_sse + sum((ram_ssb[not_na_years, species] - model_ssb[not_na_years, species])^2)
+
   }
   return(total_sse)
 }
@@ -142,14 +132,22 @@ runModel <- function(rMax)
   return(sse_final)
 }
 
-aa = optim(new_Rmax, runModel, control = list(trace = 4, maxit = 1000))
+ptm <- proc.time()
+aa = optim(new_Rmax, runModel)
+proc.time() - ptm
 
-# c1 <- makeCluster(3)
+# cl <- makeCluster(detectCores()-1)
 # setDefaultCluster(cl = c1)
-# aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", control = list(trace = 4, maxit = 1000))
-
+# clusterExport(c1, c("runModel", "calculate_sse_time_series", "params", "relative_effort", "ram_ssb"))
+# 
+# ptm <- proc.time()
+# aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", lower = rep(0,9))
+# proc.time() - ptm
+# stopCluster(c1)
 
 # Run model with optimized Rmax parameters, extract and plot biomasses
+params@species_params$R_max = aa$par
+sim <- project(params, effort = relative_effort) 
 
 
 # Plot model results
