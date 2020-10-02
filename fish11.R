@@ -136,14 +136,46 @@ ptm <- proc.time()
 aa = optim(new_Rmax, runModel)
 proc.time() - ptm
 
-# cl <- makeCluster(detectCores()-1)
-# setDefaultCluster(cl = c1)
-# clusterExport(c1, c("runModel", "calculate_sse_time_series", "params", "relative_effort", "ram_ssb"))
-# 
-# ptm <- proc.time()
-# aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", lower = rep(0,9))
-# proc.time() - ptm
-# stopCluster(c1)
+# Pseudo code for calculating SSE for time-series
+calculate_sse_time_series2 <- function(ram_ssb, model_ssb)
+{
+  
+  # Temporarily remove spin up years
+  start_year = which(rownames(model_ssb) == "1970")
+  model_ssb = model_ssb[start_year:dim(model_ssb)[1],]
+  
+  return(sum(((ram_ssb - model_ssb)^2), na.rm=T))
+}
+
+# Run model just inputting rMax
+runModel2 <- function(rMax)
+{
+  # Put new vector back into species params
+  params@species_params$R_max = rMax
+  
+  # Run the model
+  sim <- project(params, effort = relative_effort)
+  
+  # Extract final biomasses
+  biomasses_through_time = getBiomass(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series2(ram_ssb, biomasses_through_time)
+  return(sse_final)
+}
+
+ptm <- proc.time()
+aa = optim(new_Rmax, runModel2)
+proc.time() - ptm
+
+cl <- makeCluster(detectCores()-1)
+setDefaultCluster(cl = cl)
+clusterExport(cl, c("runModel", "calculate_sse_time_series", "params", "relative_effort", "ram_ssb"))
+
+ptm <- proc.time()
+aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", lower = rep(0,9), upper = rep(1e+20, 9))
+proc.time() - ptm
+stopCluster(cl)
 
 # Run model with optimized Rmax parameters, extract and plot biomasses
 params@species_params$R_max = aa$par
@@ -154,6 +186,8 @@ sim <- project(params, effort = relative_effort)
 dev.new()
 plot(sim, include_critical = TRUE)
 x =params@species_params
+biomasses_through_time = getBiomass(sim)
+
 
 
 
