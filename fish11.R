@@ -136,49 +136,50 @@ ptm <- proc.time()
 aa = optim(new_Rmax, runModel)
 proc.time() - ptm
 
-# Pseudo code for calculating SSE for time-series
-calculate_sse_time_series2 <- function(ram_ssb, model_ssb)
-{
-  
-  # Temporarily remove spin up years
-  start_year = which(rownames(model_ssb) == "1970")
-  model_ssb = model_ssb[start_year:dim(model_ssb)[1],]
-  
-  return(sum(((ram_ssb - model_ssb)^2), na.rm=T))
-}
+# # Pseudo code for calculating SSE for time-series
+# calculate_sse_time_series2 <- function(ram_ssb, model_ssb)
+# {
+#   
+#   # Temporarily remove spin up years
+#   start_year = which(rownames(model_ssb) == "1970")
+#   model_ssb = model_ssb[start_year:dim(model_ssb)[1],]
+#   
+#   return(sum(((ram_ssb - model_ssb)^2), na.rm=T))
+# }
+# 
+# # Run model just inputting rMax
+# runModel2 <- function(rMax)
+# {
+#   # Put new vector back into species params
+#   params@species_params$R_max = rMax
+#   
+#   # Run the model
+#   sim <- project(params, effort = relative_effort)
+#   
+#   # Extract final biomasses
+#   biomasses_through_time = getBiomass(sim)
+#   
+#   # Calculate SSE
+#   sse_final <- calculate_sse_time_series2(ram_ssb, biomasses_through_time)
+#   return(sse_final)
+# }
+# 
+# ptm <- proc.time()
+# aa = optim(new_Rmax, runModel2)
+# proc.time() - ptm
 
-# Run model just inputting rMax
-runModel2 <- function(rMax)
-{
-  # Put new vector back into species params
-  params@species_params$R_max = rMax
-  
-  # Run the model
-  sim <- project(params, effort = relative_effort)
-  
-  # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
-  
-  # Calculate SSE
-  sse_final <- calculate_sse_time_series2(ram_ssb, biomasses_through_time)
-  return(sse_final)
-}
-
-ptm <- proc.time()
-aa = optim(new_Rmax, runModel2)
-proc.time() - ptm
-
-cl <- makeCluster(detectCores()-1)
-setDefaultCluster(cl = cl)
-clusterExport(cl, c("runModel", "calculate_sse_time_series", "params", "relative_effort", "ram_ssb"))
-
-ptm <- proc.time()
-aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", lower = rep(0,9), upper = rep(1e+20, 9))
-proc.time() - ptm
-stopCluster(cl)
+# cl <- makeCluster(detectCores()-1)
+# setDefaultCluster(cl = cl)
+# clusterExport(cl, c("runModel", "calculate_sse_time_series", "params", "relative_effort", "ram_ssb"))
+# 
+# ptm <- proc.time()
+# aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", lower = rep(0,9), upper = rep(1e+20, 9))
+# proc.time() - ptm
+# stopCluster(cl)
 
 # Run model with optimized Rmax parameters, extract and plot biomasses
 params@species_params$R_max = aa$par
+
 sim <- project(params, effort = relative_effort) 
 
 
@@ -211,20 +212,30 @@ biomasses_through_time = getBiomass(sim)
 # }
 
 # initial value for kappa
-kappa_temp = 1.0e11
+# kappa_temp = 1.0e11
+# 
+# # Optimize rMax and kappa parameter estimates
+# # Optimize while setting a lower bound on Rmax
+# #bb = optim(c(new_Rmax, kappa_temp), runModelMultiOptim, method = "L-BFGS-B", lower = rep(0,10))
+# bb = optim(new_Rmax, runModel, method = "L-BFGS-B", lower = rep(0,9), control = list(trace = 4, maxit = 1000))
+# 
+# 
+# # Run model with optimized Rmax parameters, extract and plot biomasses
+# params <- setParams(params, kappa = initialParameterValues[9])
+# params@species_params$R_max = bb$par
+# sim <- project(params, effort = relative_effort) 
+# 
+# # Plot model results
+# dev.new()
+# plot(sim, include_critical = TRUE)
+# x =params@species_params
 
-# Optimize rMax and kappa parameter estimates
-# Optimize while setting a lower bound on Rmax
-#bb = optim(c(new_Rmax, kappa_temp), runModelMultiOptim, method = "L-BFGS-B", lower = rep(0,10))
-bb = optim(new_Rmax, runModel, method = "L-BFGS-B", lower = rep(0,9), control = list(trace = 4, maxit = 1000))
+
+# FOR ISABELLE TO RUN THERMIZER MODEL PUT THIS INTO THE SPECIES PARAMS MATRIX
+#params@species_params$R_max = sim@params@species_params$R_max
 
 
-# Run model with optimized Rmax parameters, extract and plot biomasses
-params <- setParams(params, kappa = initialParameterValues[9])
-params@species_params$R_max = bb$par
-sim <- project(params, effort = relative_effort) 
-
-# Plot model results
-dev.new()
-plot(sim, include_critical = TRUE)
-x =params@species_params
+# # Create dummy temperature matrix
+# temp_matrix = matrix(nrow = 100 + 48 + 83, ncol =  9)
+# for (ii in 1:9)
+#   temp_matrix[,ii] = c(rep(10,148), seq(10,12, length.out = 83))
