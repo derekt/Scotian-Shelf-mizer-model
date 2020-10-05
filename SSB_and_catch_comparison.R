@@ -112,21 +112,21 @@ for (ii in 1:9)
 
 #just trying cod
 
-library(ggplot2)
+#library(ggplot2)
 
 
-cod = as(read.csv("Desktop/cod.csv", row.names = 1), "data.frame")
+#cod = as(read.csv("Desktop/cod.csv", row.names = 1), "data.frame")
 
-colnames(cod) <- c('Years', 'PREDCOD', 'OBSCOD')
+#colnames(cod) <- c('Years', 'PREDCOD', 'OBSCOD')
 
 
 
-library(ggplot2)
+#library(ggplot2)
 
-p = ggplot() + 
-  geom_line(data = cod, aes(x = Years, y = PREDCOD), color = "blue") +
-  geom_line(data = cod, aes(x = Years, y = OBSCOD), color = "red")+ ylab("catch (g)")
-p
+#p = ggplot() + 
+  #geom_line(data = cod, aes(x = Years, y = PREDCOD), color = "blue") +
+  #geom_line(data = cod, aes(x = Years, y = OBSCOD), color = "red")+ ylab("catch (g)")
+#p
 
 ##################################
 #so the l;andings cod did look better, but we don't have landings data for all nine species.
