@@ -5,6 +5,7 @@
 #loading results from model run that Derek put on github
 #load("/Users/isabellehurley/Downloads/model_output.Rdata")
 load("model_output.Rdata")
+setwd("c:/users/derekt/work/isabellefishery/")
 
 
 #sim=model_output
@@ -17,7 +18,8 @@ params@species_params
 #now I want to try and add another plot with fishing mortality
 
 
-f_history  = as(read.csv("Desktop/f_history_no_blanks.csv", row.names = 1), "matrix")
+#f_history  = as(read.csv("Desktop/f_history_no_blanks.csv", row.names = 1), "matrix")
+f_history  = as(read.csv("f_history_no_blanks.csv", row.names = 1), "matrix")
 
 head(f_history)
 
@@ -133,7 +135,7 @@ for (ii in 1:9)
 #so I went back to my NAFO catch code and I think I found the error
 #trying again
 
-obs_catch = as(read.csv("Desktop/obs_catch2.csv", row.names = 1), "matrix")
+obs_catch = as(read.csv("obs_catch2.csv", row.names = 1), "matrix")
 colnames(obs_catch) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 obs_catch <- obs_catch[,1:9]
 
