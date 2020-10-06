@@ -38,8 +38,10 @@ library("mizer")
    
 
 # Load species parameters
+setwd("c:/users/derekt/work/isabellefishery/")
 
-species_params = read.csv("Desktop/thermizer_params.csv")
+species_params = read.csv("thermizer_params.csv")
+names(species_params)[1] = "species"
 
 # Set up gear params and selectivity function
 
@@ -64,8 +66,11 @@ sim <- project(params, effort = , t_max = 100, dt=0.25)
 plot(sim)
 
 # Load the selectivity matrix for knife-edge selectivity
-fishing_type = read.csv("Desktop/Mat_knife_edge_gear_params2.csv")
-fishing_type=Mat_knife_edge_gear_params2
+#fishing_type = read.csv("Desktop/Mat_knife_edge_gear_params2.csv")
+fishing_type = read.csv("Mat_knife_edge_gear_params2.csv")
+names(fishing_type)[1] = "species"
+#fishing_type=Mat_knife_edge_gear_params2
+
 gear_params <- fishing_type
 names(gear_params)[1] = "species"
 
@@ -100,13 +105,21 @@ plot(sim)
   #   library(readr)
   #  effort_Fhistsoc<-readR("Downloads/FishingEffort.RDS")
    
-   effort_Fhistsoc = read.csv("Desktop/f_therMizer.csv")
+   #effort_Fhistsoc = read.csv("Desktop/f_therMizer.csv")
+   effort_Fhistsoc = read.csv("f_therMizer.csv")
+   
+   
    # Build fishing effort arrays
    #  we'll begin the model with 100 years of constant input for spinup.  This means the first year will be 1870 (1970 - 100).
    times <- seq(1870, 2100, by = 1)
    gear_names <-  gear_params(params)$gear
    effort_array_Fhistsoc <- array(NA, dim = c(length(times), length(gear_names)), dimnames = list(time = times, gear = gear_names))
-effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimnames = list(time = times, gear = gear_names))
+   effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimnames = list(time = times, gear = gear_names))
+   
+   # Remove the year as unneeded
+   effort_Fhistsoc <- effort_Fhistsoc[,2:dim(effort_Fhistsoc)[2]]
+   effort_Fhistsoc <- as.matrix(effort_Fhistsoc)
+   
 #    # Now fill the array
    # Remember, the first 600 years are for spin-up
    # During this time, the first input value is repeated at each time step
@@ -116,7 +129,7 @@ effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimna
        effort_array_Fhistsoc[t,] <- effort_Fhistsoc[1,]
        effort_array_Fnat[t,] <- 0
      } else {
-       effort_array_Fhistsoc[t,] <- effort_Fhistsoc[t - 100]
+       effort_array_Fhistsoc[t,] <- effort_Fhistsoc[t - 100,]
        effort_array_Fnat[t,] <- 0
      }
    }
@@ -136,43 +149,51 @@ effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimna
    
  
    # Load data for each CMIP6 model: GFDL-ESM4 and IPSL-CM6A-LR
-   GFDL_temperature_PIcontrol <- read.table("GFDL_ocean_temp_array_PIcontrol.dat")
-   GFDL_temperature_CC126 <- read.table("GFDL_ocean_temp_array_CCscenario_126.dat")
-   GFDL_temperature_CC585 <- read.table("GFDL_ocean_temp_array_CCscenario_585.dat")
-   IPSL_temperature_PIcontrol <- read.table("IPSL_ocean_temp_array_PIcontrol.dat")
-   IPSL_temperature_CC126 <- read.table("IPSL_ocean_temp_array_CCscenario_126.dat")
-   IPSL_temperature_CC585 <- read.table("IPSL_ocean_temp_array_CCscenario_585.dat")
-   GFDL_temperature_PIcontrol <- as(GFDL_temperature_PIcontrol, "matrix")
-   GFDL_temperature_CC126 <- as(GFDL_temperature_CC126, "matrix")
-   GFDL_temperature_CC585 <- as(GFDL_temperature_CC585, "matrix")
-   IPSL_temperature_PIcontrol <- as(IPSL_temperature_PIcontrol, "matrix")
-   IPSL_temperature_CC126 <- as(IPSL_temperature_CC126, "matrix")
-   IPSL_temperature_CC585 <- as(IPSL_temperature_CC585, "matrix")
+   # GFDL_temperature_PIcontrol <- read.table("GFDL_ocean_temp_array_PIcontrol.dat")
+   # GFDL_temperature_CC126 <- read.table("GFDL_ocean_temp_array_CCscenario_126.dat")
+   # GFDL_temperature_CC585 <- read.table("GFDL_ocean_temp_array_CCscenario_585.dat")
+   # IPSL_temperature_PIcontrol <- read.table("IPSL_ocean_temp_array_PIcontrol.dat")
+   # IPSL_temperature_CC126 <- read.table("IPSL_ocean_temp_array_CCscenario_126.dat")
+   # IPSL_temperature_CC585 <- read.table("IPSL_ocean_temp_array_CCscenario_585.dat")
+   # GFDL_temperature_PIcontrol <- as(GFDL_temperature_PIcontrol, "matrix")
+   # GFDL_temperature_CC126 <- as(GFDL_temperature_CC126, "matrix")
+   # GFDL_temperature_CC585 <- as(GFDL_temperature_CC585, "matrix")
+   # IPSL_temperature_PIcontrol <- as(IPSL_temperature_PIcontrol, "matrix")
+   # IPSL_temperature_CC126 <- as(IPSL_temperature_CC126, "matrix")
+   # IPSL_temperature_CC585 <- as(IPSL_temperature_CC585, "matrix")
+   
    # Build temperature arrays following methods used above
    species <- params@species_params$species
-   ocean_temp_array_GFDL_PIcontrol <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
-   ocean_temp_array_GFDL_CC126 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
-   ocean_temp_array_GFDL_CC585 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
-   ocean_temp_array_IPSL_PIcontrol <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
-   ocean_temp_array_IPSL_CC126 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
+   # ocean_temp_array_GFDL_PIcontrol <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
+   # ocean_temp_array_GFDL_CC126 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
+   # ocean_temp_array_GFDL_CC585 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
+   # ocean_temp_array_IPSL_PIcontrol <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
+   # ocean_temp_array_IPSL_CC126 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
    ocean_temp_array_IPSL_CC585 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
-   for (t in (times - 1349)) {
-     if (t <= 601) { 
-       ocean_temp_array_GFDL_PIcontrol[t,] <- GFDL_temperature_PIcontrol[1,]
-       ocean_temp_array_GFDL_CC126[t,] <- GFDL_temperature_CC126[1,]
-       ocean_temp_array_GFDL_CC585[t,] <- GFDL_temperature_CC585[1,]
-       ocean_temp_array_IPSL_PIcontrol[t,] <- IPSL_temperature_PIcontrol[1,]
-       ocean_temp_array_IPSL_CC126[t,] <- IPSL_temperature_CC126[1,]
-       ocean_temp_array_IPSL_CC585[t,] <- IPSL_temperature_CC585[1,]
-     } else {
-       ocean_temp_array_GFDL_PIcontrol[t,] <- GFDL_temperature_PIcontrol[t - 600,]
-       ocean_temp_array_GFDL_CC126[t,] <- GFDL_temperature_CC126[t - 600,]
-       ocean_temp_array_GFDL_CC585[t,] <- GFDL_temperature_CC585[t - 600,]
-       ocean_temp_array_IPSL_PIcontrol[t,] <- IPSL_temperature_PIcontrol[t - 600,]
-       ocean_temp_array_IPSL_CC126[t,] <- IPSL_temperature_CC126[t - 600,]
-       ocean_temp_array_IPSL_CC585[t,] <- IPSL_temperature_CC585[t - 600,]
-     }
-   }
+   
+   # 
+   # for (t in (times - 1349)) {
+   #   if (t <= 601) { 
+   #     ocean_temp_array_GFDL_PIcontrol[t,] <- GFDL_temperature_PIcontrol[1,]
+   #     ocean_temp_array_GFDL_CC126[t,] <- GFDL_temperature_CC126[1,]
+   #     ocean_temp_array_GFDL_CC585[t,] <- GFDL_temperature_CC585[1,]
+   #     ocean_temp_array_IPSL_PIcontrol[t,] <- IPSL_temperature_PIcontrol[1,]
+   #     ocean_temp_array_IPSL_CC126[t,] <- IPSL_temperature_CC126[1,]
+   #     ocean_temp_array_IPSL_CC585[t,] <- IPSL_temperature_CC585[1,]
+   #   } else {
+   #     ocean_temp_array_GFDL_PIcontrol[t,] <- GFDL_temperature_PIcontrol[t - 600,]
+   #     ocean_temp_array_GFDL_CC126[t,] <- GFDL_temperature_CC126[t - 600,]
+   #     ocean_temp_array_GFDL_CC585[t,] <- GFDL_temperature_CC585[t - 600,]
+   #     ocean_temp_array_IPSL_PIcontrol[t,] <- IPSL_temperature_PIcontrol[t - 600,]
+   #     ocean_temp_array_IPSL_CC126[t,] <- IPSL_temperature_CC126[t - 600,]
+   #     ocean_temp_array_IPSL_CC585[t,] <- IPSL_temperature_CC585[t - 600,]
+   #   }
+   # }
+   
+   
+   
+    for (ii in 1:9)
+       ocean_temp_array_IPSL_CC585[,ii] = c(rep(10,148), seq(10,12, length.out = 83))
 
    
    #### Plankton
@@ -239,9 +260,9 @@ effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimna
    
    #### Parameters
    
-   The parameter `t_idx` will help with the simulations by providing the correct time index for the plankton and temperature forcing during the simulations.
+  # The parameter `t_idx` will help with the simulations by providing the correct time index for the plankton and temperature forcing during the simulations.
    
-   ``` {r}
+   #``` {r}
    # Time indexing parameter
    # This will be added to t to convert the year into an index for the n_pp and ocean_temp arrays
    if (min(times) == 0) {
@@ -251,11 +272,11 @@ effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimna
    } else {
    other_params(params)$t_idx = -(min(times) - 1)
    }
-   ```
+   #```
    
 # To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, it is necessary to divide by the maximum possible value for each species.  To scale the effect of temperature on metabolism to a value ranging from 0 - 1, it is necessary to subtract the minimum vaule for each species and then divide by the range.  This requires a bit of straightforward arithmetic, and users could do this on their end if they're so inclined.  These parameters handle that math so the user doesn't have to.
    
-   ```{r}
+   #```{r}
    species_params(params)$encounter_scale <- rep(NA, length(params@species_params$temp_min))
    for (indv in seq(1:length(params@species_params$temp_min))) {
    
@@ -271,14 +292,14 @@ effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimna
    
    species_params(params)$metab_min <- min_metab_value
    species_params(params)$metab_range <- max_metab_value - min_metab_value
-   ```
+   #```
    
    #### Functions
    
    # Temperature will be added to the fuctions that determine encounter rate and energy available for growth and reproduction.
    # 
    # To scale encounter rate with temperature, we're essentially taking a temperature-dependent proportion of the value calculated by the mizerEncounter function.  If species are at their thermal optimum, we take the full value.  Elsewhere in their thermal range, we take a proportion that goes to zero at the limits of species' thermal tolerence.  
-   ```{r message = FALSE, warning = FALSE}
+   #```{r message = FALSE, warning = FALSE}
    therMizerEncounter <- function(params, n, n_pp, n_other, t, ...) {
    
    # Access the correct element
@@ -307,11 +328,11 @@ effort_array_Fnat <- array(NA, dim = c(length(times), length(gear_names)), dimna
    return(max_encounter * scaled_temp_effect)
    
    }
-```
+#```
 
-To calculate the effect of temperature on metabolim, we use an Arrhenius function to scale the cost of metabolism.  When species are at their thermal maximum, the cost of metabolism is at its maximum.  When species are at their thermal minimum, the cost of metabolism is at its minimum
+#To calculate the effect of temperature on metabolim, we use an Arrhenius function to scale the cost of metabolism.  When species are at their thermal maximum, the cost of metabolism is at its maximum.  When species are at their thermal minimum, the cost of metabolism is at its minimum
 
-```{r message = FALSE, warning = FALSE}
+#```{r message = FALSE, warning = FALSE}
 therMizerEReproAndGrowth <- function(params, n, n_pp, n_other, t, encounter,
                                      feeding_level, ...) {
   
@@ -340,73 +361,73 @@ therMizerEReproAndGrowth <- function(params, n, n_pp, n_other, t, encounter,
   (sweep((1 - feeding_level) * encounter, 1, params@species_params$alpha, "*", check.margin = FALSE) - params@metab*temp_effect_metabolism)*Emultiplier  
   
 }
-```
+#```
 
-Now we'll write a function to use the CMIP6 plankton densities rather than the mizer resource dynamics.  Code for this was informed by the approach used in: <https://rpubs.com/gustav/plankton-anchovy>.  
-
-``` {r}
-# Set up new resource forcing "function" - just changes to different time slot in the n_pp_array array
-plankton_forcing <- function(params, t, ...) {
-return(other_params(params)$n_pp_array[t + params@other_params$other$t_idx,])  
-}
-```
-
-Set the new rate functions and new resource
-
-```{r}
-params <- setRateFunction(params, "Encounter", "therMizerEncounter")
-params <- setRateFunction(params, "EReproAndGrowth", "therMizerEReproAndGrowth")
-params <- setResource(params, resource_dynamics = "plankton_forcing")
-```
+#Now we'll write a function to use the CMIP6 plankton densities rather than the mizer resource dynamics.  Code for this was informed by the approach used in: <https://rpubs.com/gustav/plankton-anchovy>.  
+# 
+# ``` {r}
+# # Set up new resource forcing "function" - just changes to different time slot in the n_pp_array array
+# plankton_forcing <- function(params, t, ...) {
+# return(other_params(params)$n_pp_array[t + params@other_params$other$t_idx,])  
+# }
+# ```
+# 
+# Set the new rate functions and new resource
+# 
+# ```{r}
+# params <- setRateFunction(params, "Encounter", "therMizerEncounter")
+# params <- setRateFunction(params, "EReproAndGrowth", "therMizerEReproAndGrowth")
+# params <- setResource(params, resource_dynamics = "plankton_forcing")
+# ```
 
 ## Run the simulations
 
 #Because temperature and n_pp forcing are parameters, we'll need to make unique `params` objects for each CMIP6 model and climate scenario.  This means we'll have six new `params` objects (2 models x 3 climate scenarios).
 
-``` {r}
+#``` {r}
 # Create parameter objects
-params_GFDL_picontrol <- params
-params_GFDL_ssp1rcp26 <- params
-params_GFDL_ssp5rcp85 <- params
-params_IPSL_picontrol <- params
-params_IPSL_ssp1rcp26 <- params
+# params_GFDL_picontrol <- params
+# params_GFDL_ssp1rcp26 <- params
+# params_GFDL_ssp5rcp85 <- params
+# params_IPSL_picontrol <- params
+# params_IPSL_ssp1rcp26 <- params
 params_IPSL_ssp5rcp85 <- params
 # Attach temperature
-other_params(params_GFDL_picontrol)$ocean_temp <- ocean_temp_array_GFDL_PIcontrol
-other_params(params_GFDL_ssp1rcp26)$ocean_temp <- ocean_temp_array_GFDL_CC126
-other_params(params_GFDL_ssp5rcp85)$ocean_temp <- ocean_temp_array_GFDL_CC585
-other_params(params_IPSL_picontrol)$ocean_temp <- ocean_temp_array_IPSL_PIcontrol
-other_params(params_IPSL_ssp1rcp26)$ocean_temp <- ocean_temp_array_IPSL_CC126
+# other_params(params_GFDL_picontrol)$ocean_temp <- ocean_temp_array_GFDL_PIcontrol
+# other_params(params_GFDL_ssp1rcp26)$ocean_temp <- ocean_temp_array_GFDL_CC126
+# other_params(params_GFDL_ssp5rcp85)$ocean_temp <- ocean_temp_array_GFDL_CC585
+# other_params(params_IPSL_picontrol)$ocean_temp <- ocean_temp_array_IPSL_PIcontrol
+# other_params(params_IPSL_ssp1rcp26)$ocean_temp <- ocean_temp_array_IPSL_CC126
 other_params(params_IPSL_ssp5rcp85)$ocean_temp <- ocean_temp_array_IPSL_CC585
 # Attach plankton
-other_params(params_GFDL_picontrol)$n_pp_array <- n_pp_array_GFDL_PIcontrol
-other_params(params_GFDL_ssp1rcp26)$n_pp_array <- n_pp_array_GFDL_CC126
-other_params(params_GFDL_ssp5rcp85)$n_pp_array <- n_pp_array_GFDL_CC585
-other_params(params_IPSL_picontrol)$n_pp_array <- n_pp_array_IPSL_PIcontrol
-other_params(params_IPSL_ssp1rcp26)$n_pp_array <- n_pp_array_IPSL_CC126
-other_params(params_IPSL_ssp5rcp85)$n_pp_array <- n_pp_array_IPSL_CC585
-```
+# other_params(params_GFDL_picontrol)$n_pp_array <- n_pp_array_GFDL_PIcontrol
+# other_params(params_GFDL_ssp1rcp26)$n_pp_array <- n_pp_array_GFDL_CC126
+# other_params(params_GFDL_ssp5rcp85)$n_pp_array <- n_pp_array_GFDL_CC585
+# other_params(params_IPSL_picontrol)$n_pp_array <- n_pp_array_IPSL_PIcontrol
+# other_params(params_IPSL_ssp1rcp26)$n_pp_array <- n_pp_array_IPSL_CC126
+# other_params(params_IPSL_ssp5rcp85)$n_pp_array <- n_pp_array_IPSL_CC585
+# ```
 
 #Now we can run the simulations.  There are 12 runs here: 3 climate scenarios x 2 fishing scenarios x 2 #CMIP6 models.
 
 # When running calling `project`, we'll also provide the vector for `initial_n_pp`, which is simply the first value from the n_pp arrays.
 
-``` {r message = FALSE}
+#``` {r message = FALSE}
 # GFDL-ESM4
-sim_GFDL_picontrol_histsoc <- project(params_GFDL_picontrol, initial_n_pp = n_pp_array_GFDL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fhistsoc)
-sim_GFDL_picontrol_nat <- project(params_GFDL_picontrol, initial_n_pp = n_pp_array_GFDL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fnat)
-sim_GFDL_ssp1rcp26_histsoc <- project(params_GFDL_ssp1rcp26, initial_n_pp = n_pp_array_GFDL_CC126[1,], t_max = length(times), effort = effort_array_Fhistsoc)
-sim_GFDL_ssp1rcp26_nat <- project(params_GFDL_ssp1rcp26, initial_n_pp = n_pp_array_GFDL_CC126[1,], t_max = length(times), effort = effort_array_Fnat)
-sim_GFDL_ssp5rcp85_histsoc <- project(params_GFDL_ssp5rcp85, initial_n_pp = n_pp_array_GFDL_CC585[1,], t_max = length(times), effort = effort_array_Fhistsoc)
-sim_GFDL_ssp5rcp85_nat <- project(params_GFDL_ssp5rcp85, initial_n_pp = n_pp_array_GFDL_CC585[1,], t_max = length(times), effort = effort_array_Fnat)
-# IPSL-CM6A-LR
-sim_IPSL_picontrol_histsoc <- project(params_IPSL_picontrol, initial_n_pp = n_pp_array_IPSL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fhistsoc)
-sim_IPSL_picontrol_nat <- project(params_IPSL_picontrol, initial_n_pp = n_pp_array_IPSL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fnat)
-sim_IPSL_ssp1rcp26_histsoc <- project(params_IPSL_ssp1rcp26, initial_n_pp = n_pp_array_IPSL_CC126[1,], t_max = length(times), effort = effort_array_Fhistsoc)
-sim_IPSL_ssp1rcp26_nat <- project(params_IPSL_ssp1rcp26, initial_n_pp = n_pp_array_IPSL_CC126[1,], t_max = length(times), effort = effort_array_Fnat)
-sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+# sim_GFDL_picontrol_histsoc <- project(params_GFDL_picontrol, initial_n_pp = n_pp_array_GFDL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+# sim_GFDL_picontrol_nat <- project(params_GFDL_picontrol, initial_n_pp = n_pp_array_GFDL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fnat)
+# sim_GFDL_ssp1rcp26_histsoc <- project(params_GFDL_ssp1rcp26, initial_n_pp = n_pp_array_GFDL_CC126[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+# sim_GFDL_ssp1rcp26_nat <- project(params_GFDL_ssp1rcp26, initial_n_pp = n_pp_array_GFDL_CC126[1,], t_max = length(times), effort = effort_array_Fnat)
+# sim_GFDL_ssp5rcp85_histsoc <- project(params_GFDL_ssp5rcp85, initial_n_pp = n_pp_array_GFDL_CC585[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+# sim_GFDL_ssp5rcp85_nat <- project(params_GFDL_ssp5rcp85, initial_n_pp = n_pp_array_GFDL_CC585[1,], t_max = length(times), effort = effort_array_Fnat)
+# # IPSL-CM6A-LR
+# sim_IPSL_picontrol_histsoc <- project(params_IPSL_picontrol, initial_n_pp = n_pp_array_IPSL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+# sim_IPSL_picontrol_nat <- project(params_IPSL_picontrol, initial_n_pp = n_pp_array_IPSL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fnat)
+# sim_IPSL_ssp1rcp26_histsoc <- project(params_IPSL_ssp1rcp26, initial_n_pp = n_pp_array_IPSL_CC126[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+# sim_IPSL_ssp1rcp26_nat <- project(params_IPSL_ssp1rcp26, initial_n_pp = n_pp_array_IPSL_CC126[1,], t_max = length(times), effort = effort_array_Fnat)
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fhistsoc)
 sim_IPSL_ssp5rcp85_nat <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fnat)
-```
+#```
 And plot the results to get a sense of what things look like.
 
 ``` {r}
