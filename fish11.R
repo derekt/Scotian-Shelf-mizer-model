@@ -6,7 +6,7 @@ library(mizer)
 setwd("c:/users/derekt/work/isabellefishery/")
 
 # First let's import the f_history CSV. This contains fishing mortality history for each species
-f_history <- as(read.csv("c:/users/derekt/work/isabellefishery/f_history_no_blanks.csv", row.names = 1), "matrix")
+f_history <- as(read.csv("c:/users/derekt/work/isabellefishery/therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
 colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 
 # Now read in the species life history parameters matrix
