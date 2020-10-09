@@ -209,21 +209,24 @@ plot(sim)
    # GFDL_n_pp_CC585 <- read.table("GFDL_n_pp_array_CCscenario_585_scaled_S1.0I0.85.dat")
    # IPSL_n_pp_PIcontrol <- read.table("IPSL_n_pp_array_PIcontrol_scaled_S1.0I0.85.dat")
    # IPSL_n_pp_CC126 <- read.table("IPSL_n_pp_array_CCscenario_126_scaled_S1.0I0.85.dat")
-   # IPSL_n_pp_CC585 <- read.table("IPSL_n_pp_array_CCscenario_585_scaled_S1.0I0.85.dat")
+   #IPSL_n_pp_CC585 <- read.table("IPSL_n_pp_array_CCscenario_585_scaled_S1.0I0.85.dat")
    # GFDL_n_pp_PIcontrol <- as(GFDL_n_pp_PIcontrol, "matrix")
    # GFDL_n_pp_CC126 <- as(GFDL_n_pp_CC126, "matrix")
    # GFDL_n_pp_CC585 <- as(GFDL_n_pp_CC585, "matrix")
    # IPSL_n_pp_PIcontrol <- as(IPSL_n_pp_PIcontrol, "matrix")
    # IPSL_n_pp_CC126 <- as(IPSL_n_pp_CC126, "matrix")
-   # IPSL_n_pp_CC585 <- as(IPSL_n_pp_CC585, "matrix")
+   #IPSL_n_pp_CC585 <- as(IPSL_n_pp_CC585, "matrix")
    # # Build plankton arrays to be filled
-   # sizes <- params@w_full
+   sizes <- params@w_full
    # n_pp_array_GFDL_PIcontrol <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
    # n_pp_array_GFDL_CC126 <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
    # n_pp_array_GFDL_CC585 <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
    # n_pp_array_IPSL_PIcontrol <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
    # n_pp_array_IPSL_CC126 <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
-   # n_pp_array_IPSL_CC585 <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
+   
+   # TEMPORARY
+   n_pp_array_IPSL_CC585 <- array(28, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
+   #n_pp_array_IPSL_CC585 <- array(NA, dim = c(length(times), length(sizes)), dimnames = list(time = times, w = sizes))
    # # Fill arrays, remembering that values in n_pp are log10 abundances.
    # # They'll need to be transformed (inverse log10) and divided by bin width (dw_full)
    # ### JB: COULD DO THIS IN PLANKTON_PREP?
@@ -425,43 +428,46 @@ other_params(params_IPSL_ssp5rcp85)$ocean_temp <- ocean_temp_array_IPSL_CC585
 # sim_IPSL_picontrol_nat <- project(params_IPSL_picontrol, initial_n_pp = n_pp_array_IPSL_PIcontrol[1,], t_max = length(times), effort = effort_array_Fnat)
 # sim_IPSL_ssp1rcp26_histsoc <- project(params_IPSL_ssp1rcp26, initial_n_pp = n_pp_array_IPSL_CC126[1,], t_max = length(times), effort = effort_array_Fhistsoc)
 # sim_IPSL_ssp1rcp26_nat <- project(params_IPSL_ssp1rcp26, initial_n_pp = n_pp_array_IPSL_CC126[1,], t_max = length(times), effort = effort_array_Fnat)
-# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fhistsoc)
+sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fhistsoc)
 sim_IPSL_ssp5rcp85_nat <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fnat)
 #```
-And plot the results to get a sense of what things look like.
+#And plot the results to get a sense of what things look like.
 
-``` {r}
-plot(sim_GFDL_picontrol_histsoc)
-plot(sim_GFDL_picontrol_nat)
-plot(sim_GFDL_ssp1rcp26_histsoc)
-plot(sim_GFDL_ssp1rcp26_nat)
-plot(sim_GFDL_ssp5rcp85_histsoc)
-plot(sim_GFDL_ssp5rcp85_nat)
-# IPSL-CM6A-LR
-plot(sim_IPSL_picontrol_histsoc)
-plot(sim_IPSL_picontrol_nat)
-plot(sim_IPSL_ssp1rcp26_histsoc)
-plot(sim_IPSL_ssp1rcp26_nat)
+#``` {r}
+# plot(sim_GFDL_picontrol_histsoc)
+# plot(sim_GFDL_picontrol_nat)
+# plot(sim_GFDL_ssp1rcp26_histsoc)
+# plot(sim_GFDL_ssp1rcp26_nat)
+# plot(sim_GFDL_ssp5rcp85_histsoc)
+# plot(sim_GFDL_ssp5rcp85_nat)
+# # IPSL-CM6A-LR
+# plot(sim_IPSL_picontrol_histsoc)
+# plot(sim_IPSL_picontrol_nat)
+# plot(sim_IPSL_ssp1rcp26_histsoc)
+#plot(sim_IPSL_ssp1rcp26_nat)
+dev.new()
 plot(sim_IPSL_ssp5rcp85_histsoc)
+dev.new()
 plot(sim_IPSL_ssp5rcp85_nat)
+
 ## FEEDING LEVELS VERY HIGH : CHECK PLANKTON COULD BE RELATIVE TO CALIBRATED? CHECK FISHING ALSO RELATIVE? CHECK CATCHABILTY NOT BEING USED
 ### CHECK GROWTH, CATCHES ETC
-```
-After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
+#```
+#After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
-```{r}
+#```{r}
 # GFDL-ESM4
-save(sim_GFDL_picontrol_histsoc, file = "sim_GFDL_picontrol_histsoc.Rdata", ascii = TRUE)
-save(sim_GFDL_picontrol_nat, file = "sim_GFDL_picontrol_nat.Rdata", ascii = TRUE)
-save(sim_GFDL_ssp1rcp26_histsoc, file = "sim_GFDL_ssp1rcp26_histsoc.Rdata", ascii = TRUE)
-save(sim_GFDL_ssp1rcp26_nat, file = "sim_GFDL_ssp1rcp26_nat.Rdata", ascii = TRUE)
-save(sim_GFDL_ssp5rcp85_histsoc, file = "sim_GFDL_ssp5rcp85_histsoc.Rdata", ascii = TRUE)
-save(sim_GFDL_ssp5rcp85_nat, file = "sim_GFDL_ssp5rcp85_nat.Rdata", ascii = TRUE)
+# save(sim_GFDL_picontrol_histsoc, file = "sim_GFDL_picontrol_histsoc.Rdata", ascii = TRUE)
+# save(sim_GFDL_picontrol_nat, file = "sim_GFDL_picontrol_nat.Rdata", ascii = TRUE)
+# save(sim_GFDL_ssp1rcp26_histsoc, file = "sim_GFDL_ssp1rcp26_histsoc.Rdata", ascii = TRUE)
+# save(sim_GFDL_ssp1rcp26_nat, file = "sim_GFDL_ssp1rcp26_nat.Rdata", ascii = TRUE)
+# save(sim_GFDL_ssp5rcp85_histsoc, file = "sim_GFDL_ssp5rcp85_histsoc.Rdata", ascii = TRUE)
+# save(sim_GFDL_ssp5rcp85_nat, file = "sim_GFDL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 # IPSL-CM6A-LR
-save(sim_IPSL_picontrol_histsoc, file = "sim_IPSL_picontrol_histsoc.Rdata", ascii = TRUE)
-save(sim_IPSL_picontrol_nat, file = "sim_IPSL_picontrol_nat.Rdata", ascii = TRUE)
-save(sim_IPSL_ssp1rcp26_histsoc, file = "sim_IPSL_ssp1rcp26_histsoc.Rdata", ascii = TRUE)
-save(sim_IPSL_ssp1rcp26_nat, file = "sim_IPSL_ssp1rcp26_nat.Rdata", ascii = TRUE)
+# save(sim_IPSL_picontrol_histsoc, file = "sim_IPSL_picontrol_histsoc.Rdata", ascii = TRUE)
+# save(sim_IPSL_picontrol_nat, file = "sim_IPSL_picontrol_nat.Rdata", ascii = TRUE)
+# save(sim_IPSL_ssp1rcp26_histsoc, file = "sim_IPSL_ssp1rcp26_histsoc.Rdata", ascii = TRUE)
+# save(sim_IPSL_ssp1rcp26_nat, file = "sim_IPSL_ssp1rcp26_nat.Rdata", ascii = TRUE)
 save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc.Rdata", ascii = TRUE)
 save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
-```
+#```
