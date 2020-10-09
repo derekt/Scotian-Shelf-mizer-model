@@ -6,7 +6,7 @@ library(mizer)
 setwd("c:/users/derekt/work/isabellefishery/")
 
 # First let's import the f_history CSV. This contains fishing mortality history for each species
-f_history <- as(read.csv("c:/users/derekt/work/isabellefishery/therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
+f_history <- as(read.csv("therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
 colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 
 # Now read in the species life history parameters matrix
@@ -14,7 +14,7 @@ species_params = read.csv("species_params_species_with_ram_SSB.csv")
 names(species_params)[1] = "species"
 
 # Finally, read in the time-varying SSB against which to compare the model
-ram_ssb = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
+ram_ssb = as(read.csv("SSB_total_grams.csv", row.names = 1), "matrix")
 colnames(ram_ssb) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 ram_ssb <- ram_ssb[,1:9]
 
