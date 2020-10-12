@@ -25,6 +25,18 @@
    #   install.packages("mizer")
    # }
    
+
+
+# FOR ISABELLE TO RUN THERMIZER MODEL PUT THIS INTO THE SPECIES PARAMS MATRIX
+#params@species_params$R_max = sim@params@species_params$R_max
+
+
+# # Create dummy temperature matrix
+# temp_matrix = matrix(nrow = 100 + 48 + 83, ncol =  9)
+# for (ii in 1:9)
+#   temp_matrix[,ii] = c(rep(10,148), seq(10,12, length.out = 83))
+
+
 library("mizer")
 
    
@@ -82,7 +94,7 @@ species_params[,5] = rep(0.8,9)
 
 # Set up parameters data frame. Very sensitive to the value of kappa
 params <- newMultispeciesParams(species_params, 
-                                kappa = 1e12,
+                                kappa = 5e12,
                                 gear_params = gear_params)
 
 sim <- project(params, effort = 1, t_max = 100, dt=0.1)
@@ -119,6 +131,9 @@ plot(sim)
    # Remove the year as unneeded
    effort_Fhistsoc <- effort_Fhistsoc[,2:dim(effort_Fhistsoc)[2]]
    effort_Fhistsoc <- as.matrix(effort_Fhistsoc)
+   
+   # Add in the additional natural mortality for cod
+    ### TBDrelative_effort[125:dim(relative_effort)[1],2] = relative_effort[125:dim(relative_effort)[1],2] + 0.5
    
 #    # Now fill the array
    # Remember, the first 600 years are for spin-up

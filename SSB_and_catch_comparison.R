@@ -19,7 +19,7 @@ params@species_params
 
 
 #f_history  = as(read.csv("Desktop/f_history_no_blanks.csv", row.names = 1), "matrix")
-f_history  = as(read.csv("f_history_no_blanks.csv", row.names = 1), "matrix")
+f_history  = as(read.csv("therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
 
 head(f_history)
 
@@ -51,7 +51,7 @@ for (ii in 1:9)
   plot(years, obs_SSB[,ii], xlab = "Year", ylab = "SSB", type = "l", ylim = c(min_biomass, max_biomass + 100000000000), main = ssb_pred_obs$species[ii])
   lines(years, pred_SSB[,ii], col= "red")
   legend("topright", legend = c("Predicted SSB", "Observed SSB"), col = c("red", "black"), lty=1, cex=0.8)
-  plot(years, f_history[,ii], xlab = "Year", ylab = "fishing moratlity", type = "l", ylim = c(0, 1))
+  plot(years, f_history[,ii], xlab = "Year", ylab = "fishing mortality", type = "l", ylim = c(0, 1))
   
 }
 

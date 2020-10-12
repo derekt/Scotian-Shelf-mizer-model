@@ -52,6 +52,9 @@ relative_effort <- f_history
 initial_effort <- matrix(relative_effort[1,], byrow=TRUE, nrow = 100, ncol = ncol(relative_effort), dimnames = list(1870:1969))
 relative_effort <- rbind(initial_effort, relative_effort)
 
+# Add in the additional natural mortality for cod
+relative_effort[125:dim(relative_effort)[1],2] = 1.0
+
 # Run the simulation over time with no selectivity
 sim<- project(params, effort = relative_effort, dt = 0.25)
 params@catchability
@@ -179,7 +182,6 @@ proc.time() - ptm
 
 # Run model with optimized Rmax parameters, extract and plot biomasses
 params@species_params$R_max = aa$par
-
 sim <- project(params, effort = relative_effort) 
 
 
@@ -193,24 +195,26 @@ biomasses_through_time = getBiomass(sim)
 
 
 # Run model inputting rMax and kappa
-# runModelMultiOptim <- function(initialParameterValues)
-# {
-#   # Put new vector back into species params
-#   params@species_params$R_max = initialParameterValues[1:9]
-#   params <- setParams(params, kappa = initialParameterValues[10])
-#   
-#   # Run the model
-#   sim <- project(params, effort = relative_effort)
-#   
-#   # Extract final biomasses
-#   biomasses_through_time = getBiomass(sim)
-#   
-#   
-#   # Calculate SSE
-#   sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
-#   return(sse_final)
-# }
+runModelMultiOptim <- function(initialParameterValues)
+{
+  # Put new vector back into species params
+  params@species_params$R_max = initialParameterValues[1:9]
+  params@species_params$erepro = initialParameterValues[10:18]
+  params <- setParams(params, kappa = initialParameterValues[19])
 
+  # Run the model
+  sim <- project(params, effort = relative_effort)
+
+  # Extract final biomasses
+  biomasses_through_time = getBiomass(sim)
+
+
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
+  return(sse_final)
+}
+
+bb = optim(c(new_Rmax, rep(1,9), 1e+11), runModelMultiOptim, method = "L-BFGS-B", lower = c(rep(0,9), rep(0.5,9), 1e+8), upper = c(rep(1000000000000,9), rep(1,9), 1e+14))
 # initial value for kappa
 # kappa_temp = 1.0e11
 # 
@@ -231,11 +235,7 @@ biomasses_through_time = getBiomass(sim)
 # x =params@species_params
 
 
-# FOR ISABELLE TO RUN THERMIZER MODEL PUT THIS INTO THE SPECIES PARAMS MATRIX
-#params@species_params$R_max = sim@params@species_params$R_max
-
-
-# # Create dummy temperature matrix
-# temp_matrix = matrix(nrow = 100 + 48 + 83, ncol =  9)
-# for (ii in 1:9)
-#   temp_matrix[,ii] = c(rep(10,148), seq(10,12, length.out = 83))
+params@species_params$R_max = bb$par[1:9]
+params@species_params$erepro = bb$par[10:18]
+params <- setParams(params, kappa = initialParameterValues[19])
+sim <- project(params, effort = relative_effort) 
