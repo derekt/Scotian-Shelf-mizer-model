@@ -208,7 +208,7 @@ extract_hist_future <- function(variable_name, average_vals = F, convert_mols_se
   
   write.csv(phytoplankton_conc, "phytoplankton_conc.csv")
   write.csv(zooplankton_conc, "zooplankton_conc.csv")
-  write.csv(plankton_conc, "plankton_conc.csv")
+  write.csv(plankton_conc, "plankton_conc.csv")s
   write.csv(bottom_temp, "bottom_temp.csv")
   write.csv(surface_temp, "surface_temp.csv")
   
