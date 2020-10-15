@@ -187,9 +187,8 @@ plot(sim)
    # }
    
    # Write in temperatures into the array
-   # ISABELLE, MAKE SURE THIS IS CORRECT FOR BY DEMERSALS / PELAGICS
-   ocean_temp_array_IPSL_CC585[,c(1,2,3,7,8,9)] = c(rep(bottom_temp[1,3],100), bottom_temp[,3])
-   ocean_temp_array_IPSL_CC585[,c(4,5,6)] = c(rep(surface_temp[1,3],100), surface_temp[,3])
+   ocean_temp_array_IPSL_CC585[,c(1,2,3,5,6,7,8,9)] = c(rep(bottom_temp[1,3],100), bottom_temp[,3])
+   ocean_temp_array_IPSL_CC585[,4] = c(rep(surface_temp[1,3],100), surface_temp[,3])
    
    #### Plankton
    
@@ -255,7 +254,7 @@ plot(sim)
    species_params(params)$encounter_scale <- rep(NA, length(params@species_params$temp_min))
    for (indv in seq(1:length(params@species_params$temp_min))) {
    
-   # Create a vector of all temperatures each species might encounter
+   # Create a vector of all temperatures each species has in its thermal nicheS
    temperature <- seq(params@species_params$temp_min[indv], params@species_params$temp_max[indv], by = 0.1)
    
    # Find the maximum value of the unscaled effect of temperature on encounter rate for each species 
@@ -278,7 +277,7 @@ plot(sim)
    therMizerEncounter <- function(params, n, n_pp, n_other, t, ...) {
    
    # Access the correct element
-   #temp_at_t <- params@other_params$other$ocean_temp[t + params@other_params$other$t_idx,]
+   temp_at_t <- params@other_params$other$ocean_temp[t + params@other_params$other$t_idx,]
       #print(ceiling(t + 0.1))
       temp_at_t <- params@other_params$other$ocean_temp[ceiling(t + 0.1),]
       print(temp_at_t[1])
@@ -378,13 +377,14 @@ use_empirical_kappa <- function (params, n, n_pp, n_other, rates, t, dt, ...)
    #c_p(w) = ?? w^{-??}
    #print(params@cc_pp[9])
    params@cc_pp = params@resource_params$kappa * params@w_full^(params@resource_params$lambda)
-   #print(params@cc_pp[9])
+   print(params@cc_pp[9])
    tmp <- params@rr_pp * params@cc_pp/(params@rr_pp + rates$resource_mort)
    return(tmp - (tmp - n_pp) * exp(-(params@rr_pp + rates$resource_mort) * 
                                       dt))
 }
 
 params <- setResource(params, resource_dynamics = "use_empirical_kappa")
+#params<- setResource(params, resource_dynamics = "resource_semichemostat")
 
 #Because temperature and n_pp forcing are parameters, we'll need to make unique `params` objects for each CMIP6 model and climate scenario.  This means we'll have six new `params` objects (2 models x 3 climate scenarios).
 
