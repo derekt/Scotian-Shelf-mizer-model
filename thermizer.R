@@ -35,6 +35,7 @@
 
 
 library("mizer")
+library("assertthat")
 
    
    
@@ -137,7 +138,7 @@ params <- newMultispeciesParams(species_params,
    
    # Replace the mortality > 1 with a value of 0.9
    effort_Fhistsoc[effort_Fhistsoc >=1] = 0.9
-   
+
    # Build fishing effort arrays
    #  we'll begin the model with 100 years of constant input for spinup.  This means the first year will be 1870 (1970 - 100).
    times <- seq(1870, 2100, by = 1)
@@ -417,6 +418,221 @@ other_params(params_IPSL_ssp5rcp85)$ocean_temp <- ocean_temp_array_IPSL_CC585
 #Now we can run the simulations.  There are 12 runs here: 3 climate scenarios x 2 fishing scenarios x 2 #CMIP6 models.
 
 # When running calling `project`, we'll also provide the vector for `initial_n_pp`, which is simply the first value from the n_pp arrays.
+
+
+
+
+
+project <- function (object, effort, t_max = 100, dt = 0.1, t_save = 1, 
+          t_start = 0, initial_n, initial_n_pp, append = TRUE, progress_bar = TRUE, 
+          ...) 
+{
+   validObject(object)
+   if (is(object, "MizerSim")) {
+      params <- object@params
+      no_t <- dim(object@n)[[1]]
+      initial_n <- params@initial_n
+      initial_n[] <- object@n[no_t, , ]
+      initial_n_pp <- params@initial_n_pp
+      initial_n_pp[] <- object@n_pp[no_t, ]
+      initial_n_other <- object@n_other[no_t, ]
+      t_start <- as.numeric(dimnames(object@n)[[1]][[no_t]])
+   }
+   else {
+      params <- object
+      if (missing(initial_n)) 
+         initial_n <- params@initial_n
+      if (missing(initial_n_pp)) 
+         initial_n_pp <- params@initial_n_pp
+      initial_n_other <- params@initial_n_other
+   }
+   params@initial_n[] <- initial_n
+   params@initial_n_pp[] <- initial_n_pp
+   params@initial_n_other <- initial_n_other
+   no_sp <- length(params@w_min_idx)
+   assert_that(is.array(initial_n), is.numeric(initial_n), are_equal(dim(initial_n), 
+                                                                     c(no_sp, length(params@w))))
+   assert_that(is.numeric(initial_n_pp), length(initial_n_pp) == 
+                  length(params@w_full))
+   assert_that(is.null(initial_n_other) || is.list(initial_n_other))
+   other_names <- names(params@other_dynamics)
+   if (length(other_names) > 0) {
+      if (is.null(names(initial_n_other))) {
+         stop("The initial_n_other needs to be a named list")
+      }
+      if (!setequal(names(initial_n_other), other_names)) {
+         stop("The names of the entries in initial_n_other do not match ", 
+              "the names of the other components of the model.")
+      }
+   }
+   if (missing(effort)) 
+      effort <- params@initial_effort
+   if (is.null(dim(effort))) {
+      no_gears <- dim(params@catchability)[1]
+      if ((length(effort) > 1) & (length(effort) != no_gears)) {
+         stop("Effort vector must be the same length as the number of fishing gears\n")
+      }
+      gear_names <- dimnames(params@catchability)[[1]]
+      effort_gear_names <- names(effort)
+      if (length(effort) == 1 & is.null(effort_gear_names)) {
+         effort_gear_names <- gear_names
+      }
+      if (!all(gear_names %in% effort_gear_names)) {
+         stop("Gear names in the MizerParams object (", 
+              paste(gear_names, collapse = ", "), ") do not match those in the effort vector.")
+      }
+      time_dimnames <- seq(from = t_start, to = t_start + t_max, 
+                           by = dt)
+      effort <- t(array(effort, dim = c(no_gears, length(time_dimnames)), 
+                        dimnames = list(gear = effort_gear_names, time = time_dimnames)))
+   }
+   no_gears <- dim(params@catchability)[1]
+   if (dim(effort)[2] != no_gears) {
+      stop("The number of gears in the effort array (length of the second dimension = ", 
+           dim(effort)[2], ") does not equal the number of gears in the MizerParams object (", 
+           no_gears, ").")
+   }
+   gear_names <- dimnames(params@catchability)[[1]]
+   if (!all(gear_names %in% dimnames(effort)[[2]])) {
+      stop("Gear names in the MizerParams object (", 
+           paste(gear_names, collapse = ", "), ") do not match those in the effort array.")
+   }
+   effort <- effort[, gear_names, drop = FALSE]
+   if (is.null(dimnames(effort)[[1]])) {
+      stop("The time dimname of the effort argument must be numeric.")
+   }
+   time_effort <- as.numeric(dimnames(effort)[[1]])
+   if (any(is.na(time_effort))) {
+      stop("The time dimname of the effort argument must be numeric.")
+   }
+   if (is.unsorted(time_effort)) {
+      stop("The time dimname of the effort argument should be increasing.")
+   }
+   t_end <- time_effort[length(time_effort)]
+   time_effort_dt <- seq(from = time_effort[1], to = t_end, 
+                         by = dt)
+   effort_dt <- t(array(NA, dim = c(length(time_effort_dt), 
+                                    dim(effort)[2]), dimnames = list(time = time_effort_dt, 
+                                                                     dimnames(effort)[[2]])))
+   for (i in 1:(length(time_effort) - 1)) {
+      effort_dt[, time_effort_dt >= time_effort[i]] <- effort[i, 
+                                                              ]
+   }
+   effort_dt <- t(effort_dt)
+   if ((t_save < dt) || !isTRUE(all.equal((t_save - round(t_save/dt) * 
+                                           dt), 0))) 
+      stop("t_save must be a positive multiple of dt")
+   t_skip <- round(t_save/dt)
+   t_dimnames_index <- seq(1, to = length(time_effort_dt), by = t_skip)
+   t_dimnames <- time_effort_dt[t_dimnames_index]
+   sim <- MizerSim(params, t_dimnames = t_dimnames)
+   sim@effort[] <- effort_dt[t_dimnames_index, ]
+   sim@n[1, , ] <- initial_n
+   sim@n_pp[1, ] <- initial_n_pp
+   sim@n_other[1, ] <- initial_n_other
+   no_sp <- nrow(sim@params@species_params)
+   no_w <- length(sim@params@w)
+   idx <- 2:no_w
+   resource_dynamics_fn <- get(sim@params@resource_dynamics)
+   other_dynamics_fns <- lapply(sim@params@other_dynamics, get)
+   rates_fns <- lapply(sim@params@rates_funcs, get)
+   w_min_idx_array_ref <- (sim@params@w_min_idx - 1) * no_sp + 
+      (1:no_sp)
+   a <- matrix(0, nrow = no_sp, ncol = no_w)
+   b <- matrix(0, nrow = no_sp, ncol = no_w)
+   S <- matrix(0, nrow = no_sp, ncol = no_w)
+   n <- initial_n
+   n_pp <- initial_n_pp
+   n_other <- initial_n_other
+   if (progress_bar == TRUE) {
+      pb <- progress::progress_bar$new(format = "[:bar] :percent ETA: :eta", 
+                                       total = length(t_dimnames_index), width = 60)
+   }
+   if (is(progress_bar, "Progress")) {
+      progress_bar$set(message = "Running simulation", 
+                       value = 0)
+      proginc <- 1/length(t_dimnames_index)
+   }
+   t <- 0
+   t_steps <- dim(effort_dt)[1] - 1
+   for (i_time in 1:t_steps) {
+      r <- rates_fns$Rates(params, n = n, n_pp = n_pp, n_other = n_other, 
+                           t = t, effort = effort_dt[i_time, ], rates_fns = rates_fns)
+      t <- t + dt
+      print("here")
+      print(t)
+      # Not really suitable to go here, but set the knife-edge gear parameter 
+      # to essentially zero to represent 0.5 natural mortality on all size
+      # classes of cod at 1993 and beyond
+      if (ceiling(t + 0.1) == 123)
+      {
+         params@gear_params[2,4] = 0.0001
+         params@selectivity[2,2,] = 1
+      }
+      print(params@gear_params[2,4])
+      if (t)
+      n_other_current <- n_other
+      for (res in other_names) {
+         n_other[[res]] <- other_dynamics_fns[[res]](params, 
+                                                     n = n, n_pp = n_pp, n_other = n_other_current, 
+                                                     rates = r, t = t, dt = dt)
+      }
+      n_pp <- resource_dynamics_fn(params, n = n, n_pp = n_pp, 
+                                   n_other = n_other_current, rates = r, t = t, dt = dt)
+      a[, idx] <- sweep(-r$e_growth[, idx - 1, drop = FALSE] * 
+                           dt, 2, sim@params@dw[idx], "/")
+      b[, idx] <- 1 + sweep(r$e_growth[, idx, drop = FALSE] * 
+                               dt, 2, sim@params@dw[idx], "/") + r$mort[, 
+                                                                        idx, drop = FALSE] * dt
+      S[, idx] <- n[, idx, drop = FALSE]
+      b[w_min_idx_array_ref] <- 1 + r$e_growth[w_min_idx_array_ref] * 
+         dt/sim@params@dw[sim@params@w_min_idx] + r$mort[w_min_idx_array_ref] * 
+         dt
+      n[w_min_idx_array_ref] <- (n[w_min_idx_array_ref] + r$rdd * 
+                                    dt/sim@params@dw[sim@params@w_min_idx])/b[w_min_idx_array_ref]
+      n <- inner_project_loop(no_sp = no_sp, no_w = no_w, n = n, 
+                              A = a, B = b, S = S, w_min_idx = sim@params@w_min_idx)
+      store <- t_dimnames_index %in% (i_time + 1)
+      if (any(store)) {
+         if (is(progress_bar, "Progress")) {
+            progress_bar$inc(amount = proginc)
+         }
+         if (progress_bar == TRUE) {
+            pb$tick()
+         }
+         t_idx <- which(store)
+         sim@n[t_idx, , ] <- n
+         sim@n_pp[t_idx, ] <- n_pp
+         sim@n_other[t_idx, ] <- n_other
+      }
+   }
+   if (is(object, "MizerSim") && append) {
+      no_t_old <- dim(object@n)[1]
+      no_t <- length(t_dimnames)
+      new_t_dimnames <- c(as.numeric(dimnames(object@n)[[1]]), 
+                          t_dimnames[2:length(t_dimnames)])
+      new_sim <- MizerSim(params, t_dimnames = new_t_dimnames)
+      old_indices <- 1:no_t_old
+      new_indices <- seq(from = no_t_old + 1, length.out = no_t - 
+                            1)
+      new_sim@n[old_indices, , ] <- object@n
+      new_sim@n[new_indices, , ] <- sim@n[2:no_t, , ]
+      new_sim@n_pp[old_indices, ] <- object@n_pp
+      new_sim@n_pp[new_indices, ] <- sim@n_pp[2:no_t, ]
+      new_sim@n_other[old_indices, ] <- object@n_other
+      new_sim@n_other[new_indices, ] <- sim@n_other[2:no_t, 
+                                                    ]
+      new_sim@effort[old_indices, ] <- object@effort
+      new_sim@effort[new_indices, ] <- sim@effort[2:no_t, ]
+      return(new_sim)
+   }
+   return(sim)
+}
+
+inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
+   .Call('_mizer_inner_project_loop', PACKAGE = 'mizer', no_sp, no_w, n, A, B, S, w_min_idx)
+}
+
 
 #``` {r message = FALSE}
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
