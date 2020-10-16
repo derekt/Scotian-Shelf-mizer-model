@@ -1,4 +1,3 @@
-
 # ---
 # title: "run_therMizer_FishMIP"
 # author: "julia.blanchard@utas.edu.au"
@@ -25,9 +24,7 @@
    #   install.packages("mizer")
    # }
    
-
-
-# FOR ISABELLE TO RUN THERMIZER MODEL PUT THIS INTO THE SPECIES PARAMS MATRIX
+# FOR ISABELLE TO RUN THERMIZER MODEL USING THE OPTIMIZATION FROM THE OTHER CODE PUT THIS INTO THE SPECIES PARAMS MATRIX
 #params@species_params$R_max = sim@params@species_params$R_max
 
 
@@ -52,7 +49,8 @@ library("mizer")
 # Load species parameters
 setwd("c:/users/derekt/work/isabellefishery/")
 
-species_params = read.csv("thermizer_params.csv")
+#species_params = read.csv("thermizer_params.csv")
+species_params = read.csv("thermizer_species_aquamaps.csv")
 names(species_params)[1] = "species"
 
 # Load the IPSL temperature data
@@ -101,8 +99,8 @@ params <- newMultispeciesParams(species_params,
                                 kappa = 1e11,
                                 gear_params = gear_params)
 # Run to equilibrium
-sim <- project(params, effort = , t_max = 100, dt=0.25)
-plot(sim)
+#sim <- project(params, effort = , t_max = 100, dt=0.25)
+#plot(sim)
 
 # Load the selectivity matrix for knife-edge selectivity
 #fishing_type = read.csv("Desktop/Mat_knife_edge_gear_params2.csv")
@@ -124,29 +122,21 @@ params <- newMultispeciesParams(species_params,
                                 kappa = 5e12,
                                 gear_params = gear_params)
 
-sim <- project(params, effort = 1, t_max = 100, dt=0.1)
-plot(sim)  
-## Load data needed for FishMIP scenarios
-#This round of FishMIP simulations includes three forcing inputs: fishing mortality, temperature, plankton.  We'll load them in that order.
-   
+#sim <- project(params, effort = 1, t_max = 100, dt=0.1)
+#plot(sim)  
+
 #### Fishing 
 #There are two fishing scenarios:
    
 #* histsoc: Historical effort until 2017, then fixed at 2017 levels   
 #* nat: No fishing  
-   
-#The time series of fishing mortality, "FishingEffort.dat" was created with "CreateF.Rmd".  We're also going to create another time series with F = 0 so that we can use the same years for all our scenarios.  This makes incorporating the temperature functions easier later on because all the time values will agree.
-   
 
-   # Load fishing scenario
-   # read saved data
-  # install.packages("readr")
-  #   library(readr)
-  #  effort_Fhistsoc<-readR("Downloads/FishingEffort.RDS")
    
    #effort_Fhistsoc = read.csv("Desktop/f_therMizer.csv")
-   effort_Fhistsoc = read.csv("f_therMizer.csv")
+   effort_Fhistsoc = read.csv("therm_f_best_option_no_blanks.csv")
    
+   # Replace the mortality > 1 with a value of 0.9
+   effort_Fhistsoc[effort_Fhistsoc >=1] = 0.9
    
    # Build fishing effort arrays
    #  we'll begin the model with 100 years of constant input for spinup.  This means the first year will be 1870 (1970 - 100).
@@ -160,37 +150,35 @@ plot(sim)
    effort_Fhistsoc <- as.matrix(effort_Fhistsoc)
    
 #    # Now fill the array
-   # Remember, the first 600 years are for spin-up
+   # Remember, the first 100 years are for spin-up
    # During this time, the first input value is repeated at each time step
 
    for (t in (times - 1869)) {
      if (t <= 101) { 
        effort_array_Fhistsoc[t,] <- effort_Fhistsoc[1,]
        effort_array_Fnat[t,] <- 0
-     } else {
+     } else if (t <= 148) {
        effort_array_Fhistsoc[t,] <- effort_Fhistsoc[t - 100,]
        effort_array_Fnat[t,] <- 0
-     }
+     } else
+      effort_array_Fhistsoc[t,] <- effort_Fhistsoc[48,]
+      effort_array_Fnat[t,] <- 0
    }
    
-   # Add in the additional natural mortality for cod
-   effort_array_Fhistsoc[125:dim(effort_array_Fhistsoc)[1],2] = 1.0
+   # Set the 1993 and beyond mortality in cod (representing elevated mortality in all size classes,
+   # so simultaneously the knife-edge selection goes down to 1e03g
    
-   # check it runs:
-   # simt <- project(params, effort = effort_array_Fhistsoc, dt = 0.25, t_save = 1)
-   # 
-   # plot(simt)
+   effort_array_Fhistsoc[123:dim(effort_array_Fhistsoc)[1],2] = 0.5
+   
 
-   
    #### Temperature
    
    #There is one climate scenarios, with different temperature forcing for each:  
 
    #* ssp585: Simulated historical climate, then SSP5-RCP8.5 climate
    
-#Note that only the years 1970 - 2100 are needed.  Temperature forcing files were created with "PrepTemperature_GFDL.Rmd" and "PrepTemperature_IPSL.Rmd".  
+   #Note that only the years 1970 - 2100 are needed.  Temperature forcing files were created with "PrepTemperature_GFDL.Rmd" and "PrepTemperature_IPSL.Rmd".  
    
- 
    # Load data for each CMIP6 model: GFDL-ESM4 and IPSL-CM6A-LR
    # IPSL_temperature_CC585 <- read.table("IPSL_ocean_temp_array_CCscenario_585.dat")
    # IPSL_temperature_CC585 <- as(IPSL_temperature_CC585, "matrix")
@@ -209,7 +197,8 @@ plot(sim)
    #   }
    # }
    
-   # Write in temperatures into the array
+   # Write in tbe empirical / projected temperatures into the array, based on whether the 
+   # species is pelagic or demersal
    ocean_temp_array_IPSL_CC585[,c(1,2,3,5,6,7,8,9)] = c(rep(bottom_temp[1,3],100), bottom_temp[,3])
    ocean_temp_array_IPSL_CC585[,4] = c(rep(surface_temp[1,3],100), surface_temp[,3])
    
@@ -266,7 +255,8 @@ plot(sim)
    }
    #```
    
-# To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
+   
+#   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
    #it is necessary to divide by the maximum possible value for each species.  
    #To scale the effect of temperature on metabolism to a value ranging from 0 - 1, 
    #it is necessary to subtract the minimum vaule for each species and then divide by the range.  T
@@ -298,13 +288,13 @@ plot(sim)
    # To scale encounter rate with temperature, we're essentially taking a temperature-dependent proportion of the value calculated by the mizerEncounter function.  If species are at their thermal optimum, we take the full value.  Elsewhere in their thermal range, we take a proportion that goes to zero at the limits of species' thermal tolerence.  
    #```{r message = FALSE, warning = FALSE}
    therMizerEncounter <- function(params, n, n_pp, n_other, t, ...) {
-   
+
    # Access the correct element
-   temp_at_t <- params@other_params$other$ocean_temp[t + params@other_params$other$t_idx,]
-      #print(ceiling(t + 0.1))
-      temp_at_t <- params@other_params$other$ocean_temp[ceiling(t + 0.1),]
-      print(temp_at_t[1])
+   #temp_at_t <- params@other_params$other$ocean_temp[t + params@other_params$other$t_idx,]
    
+   #print(ceiling(t + 0.1))
+   temp_at_t <- params@other_params$other$ocean_temp[ceiling(t + 0.1),]
+
    # Calculate unscaled temperature effect using a generic polynomial rate equation
    unscaled_temp_effect <- temp_at_t * (temp_at_t - params@species_params$temp_min) * (params@species_params$temp_max - temp_at_t)
 
@@ -338,9 +328,7 @@ therMizerEReproAndGrowth <- function(params, n, n_pp, n_other, t, encounter,
   
   # Access the correct element
   #temp_at_t <- params@other_params$other$ocean_temp[t + params@other_params$other$t_idx,]
-   #print(ceiling(t + 0.1))
    temp_at_t <- params@other_params$other$ocean_temp[ceiling(t + 0.1),]
-   print(temp_at_t[1])
   # Arrhenius equation
   unscaled_temp_effect <- (exp(25.22 - (0.63/((8.62e-5)*(273 + temp_at_t)))))
   
@@ -400,7 +388,7 @@ use_empirical_kappa <- function (params, n, n_pp, n_other, rates, t, dt, ...)
    #c_p(w) = ?? w^{-??}
    #print(params@cc_pp[9])
    params@cc_pp = params@resource_params$kappa * params@w_full^(params@resource_params$lambda)
-   print(params@cc_pp[9])
+   #print(params@cc_pp[9])
    tmp <- params@rr_pp * params@cc_pp/(params@rr_pp + rates$resource_mort)
    return(tmp - (tmp - n_pp) * exp(-(params@rr_pp + rates$resource_mort) * 
                                       dt))
@@ -438,11 +426,129 @@ sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(time
 
 #```
 #And plot the results to get a sense of what things look like.
-
 #``` {r}
 dev.new()
-plot(sim_IPSL_ssp5rcp85_histsoc)
+# TEMPORARY FIX FOR PRINTING
 
+
+#getMethod("plot",signature = c(x = "MizerSim", y = "missing"))
+
+# plotFeedingLevel <- function (object, species = NULL, time_range, highlight = NULL, 
+#                               all.sizes = FALSE, include_critical = FALSE, ...) 
+# {
+#    print("Here")
+#    if (is(object, "MizerSim")) {
+#       if (missing(time_range)) {
+#          time_range <- max(as.numeric(dimnames(object@n)$time))
+#       }
+#       params <- object@params
+#       feed <- getFeedingLevel(object, time_range = time_range, 
+#                               drop = FALSE, ...)
+#    }
+#    else {
+#       assert_that(is(object, "MizerParams"))
+#       params <- object
+#       feed <- getFeedingLevel(params, drop = FALSE, ...)
+#    }
+#    if (length(dim(feed)) == 3) {
+#       feed <- apply(feed, c(2, 3), mean)
+#    }
+#    if (is.null(species)) {
+#       species <- dimnames(params@initial_n)$sp[!is.na(params@A)]
+#    }
+#    sel_sp <- as.character(dimnames(feed)$sp) %in% species
+#    feed <- feed[sel_sp, , drop = FALSE]
+#    plot_dat <- data.frame(value = c(feed), Species = factor(dimnames(feed)$sp, 
+#                                                             levels = dimnames(feed)$sp), w = rep(params@w, each = length(species)))
+#    if (!all.sizes) {
+#       for (sp in species) {
+#          plot_dat$value[plot_dat$Species == sp & (plot_dat$w < 
+#                                                      params@species_params[sp, "w_min"] | plot_dat$w > 
+#                                                      params@species_params[sp, "w_inf"])] <- NA
+#       }
+#       plot_dat <- plot_dat[complete.cases(plot_dat), ]
+#    }
+#    p <- ggplot() + geom_line(aes(x = w, y = value, colour = Species, 
+#                                  linetype = Species, size = Species), data = plot_dat)
+#    linesize <- rep(0.8, length(params@linetype))
+#    names(linesize) <- names(params@linetype)
+#    linesize[highlight] <- 1.6
+#    p <- p + scale_x_continuous(name = "Size [g]", trans = "log10") + 
+#       scale_y_continuous(name = "Feeding Level", limits = c(0, 
+#                                                             1)) + scale_colour_manual(values = params@linecolour) + 
+#       scale_linetype_manual(values = params@linetype) + scale_size_manual(values = linesize)
+#    if (include_critical) {
+#       feed_crit <- getCriticalFeedingLevel(params)[sel_sp, 
+#                                                    , drop = FALSE]
+#       plot_dat_crit <- data.frame(value = c(feed_crit), Species = factor(dimnames(feed)$sp, 
+#                                                                          levels = dimnames(feed)$sp), w = rep(params@w, each = length(species)))
+#       if (!all.sizes) {
+#          for (sp in species) {
+#             plot_dat_crit$value[plot_dat_crit$Species == 
+#                                    sp & (plot_dat_crit$w < params@species_params[sp, 
+#                                                                                  "w_min"] | plot_dat_crit$w > params@species_params[sp, 
+#                                                                                                                                     "w_inf"])] <- NA
+#          }
+#          plot_dat_crit <- plot_dat_crit[complete.cases(plot_dat_crit), 
+#                                         ]
+#       }
+#       p <- p + geom_line(aes(x = w, y = value, colour = Species, 
+#                              linetype = Species), data = plot_dat_crit)
+#    }
+#    return(p)
+# }
+# 
+# getFeedingLevel <- function (object, n, n_pp, n_other, encounter, time_range, drop = FALSE,...) 
+# {
+#    if (is(object, "MizerParams")) {
+#       params <- object
+#       if (missing(encounter)) {
+#          if (missing(n)) 
+#             n <- params@initial_n
+#          if (missing(n_pp)) 
+#             n_pp <- params@initial_n_pp
+#          if (missing(n_other)) 
+#             n_other <- params@initial_n_other
+#          encounter <- getEncounter(params, n, n_pp, n_other)
+#       }
+#       if (!all(dim(encounter) == c(nrow(params@species_params), 
+#                                    length(params@w)))) {
+#          stop("encounter argument must have dimensions: no. species (", 
+#               nrow(params@species_params), ") x no. size bins (", 
+#               length(params@w), ")")
+#       }
+#       f <- get(params@rates_funcs$FeedingLevel)
+#       return(f(params, encounter = encounter))
+#    }
+#    else {
+#       sim <- object
+#       if (missing(time_range)) {
+#          time_range <- dimnames(sim@n)$time
+#       }
+#       time_elements <- get_time_elements(sim, time_range)
+#       feed_time <- plyr::aaply(which(time_elements), 1, function(x) {
+#          n <- array(sim@n[x, , ], dim = dim(sim@n)[2:3])
+#          dimnames(n) <- dimnames(sim@n)[2:3]
+#          print("Here")
+#          feed <- getFeedingLevel(sim@params, n = n, n_pp = sim@n_pp[x, 
+#                                                                     ], n_other = n_other[x, ], ...)
+#          return(feed)
+#       }, .drop = drop)
+#       return(feed_time)
+#    }
+# }
+# 
+# getEncounter <- function (params, n = initialN(params), n_pp = initialNResource(params), 
+#                           n_other = initialNOther(params), ...) 
+# {
+#    f <- get(params@rates_funcs$Encounter)
+#    f(params, n = n, n_pp = n_pp, n_other = n_other, t = 230, ...)
+# }
+
+#plot(sim_IPSL_ssp5rcp85_histsoc, time_range = 1870:2100, t = 231)
+
+plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+dev.new()
 ## FEEDING LEVELS VERY HIGH : CHECK PLANKTON COULD BE RELATIVE TO CALIBRATED? CHECK FISHING ALSO RELATIVE? CHECK CATCHABILTY NOT BEING USED
 ### CHECK GROWTH, CATCHES ETC
 #```

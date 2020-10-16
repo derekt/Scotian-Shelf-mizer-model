@@ -4,13 +4,14 @@
 
 #loading results from model run that Derek put on github
 #load("/Users/isabellehurley/Downloads/model_output.Rdata")
-load("model_output.Rdata")
+#load("model_output.Rdata")
 setwd("c:/users/derekt/work/isabellefishery/")
+load("sim_IPSL_ssp5rcp85_histsoc.Rdata")
 
 
 #sim=model_output
-plot(sim)
-params=sim@params
+plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+params=sim_IPSL_ssp5rcp85_histsoc@params
 params@species_params
 
 
@@ -28,6 +29,27 @@ head(f_history)
 class(f_history)
 colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 
+obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
+colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
+obs_SSB <- obs_SSB[,1:9]
+
+## check obs vs. predicted SSB
+pred_SSB <-getSSB(sim_IPSL_ssp5rcp85_histsoc)
+pred_SSB = pred_SSB[101:148,]
+
+
+# Calculate means in the right format
+pred_SSB_mean = apply(pred_SSB, 2, mean)
+pred_SSB_mean = melt(pred_SSB_mean)
+
+obs_SSB_mean = apply(obs_SSB, 2, mean, na.rm=T)
+
+ssb_pred_obs = cbind(pred_SSB_mean, obs_SSB_mean)
+ssb_pred_obs$species <- row.names(ssb_pred_obs)
+
+ssb_pred_obs <- as.data.frame(ssb_pred_obs)
+names(ssb_pred_obs) = c( "pred", "obs", "species")
+
 # Calculate means in the right format
 fish_obs_mean = apply(f_history, 2, mean)
 fish_obs_mean = melt(fish_obs_mean)
@@ -37,6 +59,8 @@ ssb_pred_obs_fish$species <- row.names(ssb_pred_obs_fish)
 
 ssb_pred_obs_fish <- as.data.frame(ssb_pred_obs_fish)
 names(ssb_pred_obs_fish) = c( "pred", "obs", "fishing mortality", "species")
+
+
 
 #^ok great, so now observed SSB, predicted SSB and observed fishing mortality are all in the same dataframe
 #now let's make a plot with 3 panels
@@ -66,7 +90,7 @@ for (ii in 1:9)
 # 
 # ## check obs vs. predicted catch
 # 
-# #pred_yield <-getYield(sim)
+# #pred_yield <-getYield(sim_IPSL_ssp5rcp85_histsoc)
 # #pred_yield = pred_yield[101:148,]
 # 
 # # Calculate means in the right format
@@ -141,7 +165,7 @@ obs_catch <- obs_catch[,1:9]
 
 ## check obs vs. predicted catch
 
-pred_yield <-getYield(sim)
+pred_yield <-getYield(sim_IPSL_ssp5rcp85_histsoc)
 pred_yield = pred_yield[101:148,]
 
 # Calculate means in the right format
