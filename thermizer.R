@@ -55,9 +55,32 @@ setwd("c:/users/derekt/work/isabellefishery/")
 species_params = read.csv("thermizer_params.csv")
 names(species_params)[1] = "species"
 
+# Load the IPSL temperature data
 surface_temp = read.csv("surface_temp.csv", header = T)
 bottom_temp = read.csv("bottom_temp.csv", header = T)
 plankton = read.csv("plankton_conc.csv", header = T)
+
+# Load the empirical temperature data
+empirical_temp = read.csv("empirical_temperature_data.csv", header = T)
+
+# Extract the anomoly from the IPSL data
+surface_temp = surface_temp - mean(surface_temp[1:48,3])
+bottom_temp = bottom_temp - mean(bottom_temp[1:48,3])
+
+# Now that we have the anomoly from 2018 to 2020, replace the 1970-2017 with the empirical data
+surface_temp[1:48,3] = empirical_temp[,5]
+surface_temp[49:dim(surface_temp)[1],3] = surface_temp[49:dim(surface_temp)[1],3] + mean(empirical_temp[1:48,5])
+bottom_temp[1:48,3] = empirical_temp[,2]
+bottom_temp[49:dim(bottom_temp)[1],3] = bottom_temp[49:dim(bottom_temp)[1],3] + mean(empirical_temp[1:48,2])
+
+# Do the five year smoothing
+yy = as.vector(filter(surface_temp[,3], rep(1/5,5)))
+surface_temp[3:(dim(surface_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
+yy = as.vector(filter(bottom_temp[,3], rep(1/5,5)))
+bottom_temp[3:(dim(bottom_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
+#plot(surface_temp[,3], type = "l", ylim = c(0,21))
+#lines(bottom_temp[,3], type = "l", col = "blue")
+
 
 # Set up gear params and selectivity function
 
