@@ -21,7 +21,6 @@ params@species_params
 
 #f_history  = as(read.csv("Desktop/f_history_no_blanks.csv", row.names = 1), "matrix")
 f_history  = as(read.csv("therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
-
 head(f_history)
 
 f_history <- f_history[,1:9]
@@ -159,7 +158,8 @@ for (ii in 1:9)
 #so I went back to my NAFO catch code and I think I found the error
 #trying again
 
-obs_catch = as(read.csv("obs_catch2.csv", row.names = 1), "matrix")
+obs_catch <- as(read.csv("therm_obs_catch_best_option.csv", row.names = 1), "matrix")
+
 colnames(obs_catch) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 obs_catch <- obs_catch[,1:9]
 

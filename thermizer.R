@@ -86,6 +86,8 @@ obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv"
 colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 obs_SSB <- obs_SSB[,1:9]
 
+# TEMPORARILY RESCALE
+obs_SSB <- obs_SSB / 1000
 
 # Set up gear params and selectivity function
 
