@@ -36,7 +36,7 @@ runModel <- function(rMax, params, effort, t_max)
   biomasses_through_time = getBiomass(sim)
   
   # Calculate SSE
-  sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
+  sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
   return(sse_final)
 }
 
@@ -58,7 +58,7 @@ runModelMultiOptim <- function(initialParameterValues)
   
   
   # Calculate SSE
-  sse_final <- calculate_sse_time_series(ram_ssb, biomasses_through_time)
+  sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
   return(sse_final)
 }
 

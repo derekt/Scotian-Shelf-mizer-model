@@ -81,6 +81,11 @@ bottom_temp[3:(dim(bottom_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
 #plot(surface_temp[,3], type = "l", ylim = c(0,21))
 #lines(bottom_temp[,3], type = "l", col = "blue")
 
+# Read in the observed SSB
+obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
+colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
+obs_SSB <- obs_SSB[,1:9]
+
 
 # Set up gear params and selectivity function
 
@@ -643,17 +648,15 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 new_Rmax = rep(8.26e+09, length(params@species_params$R_max))
 params_IPSL_ssp5rcp85@species_params$R_max = new_Rmax
 
-#sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
+# Optimize over the parameters
 ptm <- proc.time()
 aa = optim(new_Rmax, runModel, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
 
-# Plot model results
-dev.new()
-plot(sim, include_critical = TRUE)
-x =params@species_params
-biomasses_through_time = getBiomass(sim)
+# Run the model with the final parameters
+params_IPSL_ssp5rcp85@species_params$R_max = aa$par
+sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
 #```
 #And plot the results to get a sense of what things look like.
@@ -780,6 +783,14 @@ dev.new()
 
 plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 dev.new()
+
+
+
+# Plot model results
+dev.new()
+plot(sim_IPSL_ssp5rcp85_histsoc, include_critical = TRUE)
+x =params@species_params
+biomasses_through_time = getBiomass(sim)
 ## FEEDING LEVELS VERY HIGH : CHECK PLANKTON COULD BE RELATIVE TO CALIBRATED? CHECK FISHING ALSO RELATIVE? CHECK CATCHABILTY NOT BEING USED
 ### CHECK GROWTH, CATCHES ETC
 #```
