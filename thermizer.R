@@ -45,10 +45,11 @@ library("assertthat")
 #In order to use the therMizer extension, two additional species parameters are needed: `temp_min` and `temp_max`.  These represent the thermal tolerance limits for each species.  You could find these in the literature in physiological or tagging studies.  Alternatively, they can be assumed based on species' vertical and geographic ranges, that of their prey species, or some other information.  Note that these are only needed for the therMizer extention functions that relate to temperature, not those that relate to plankton.
    
 #For the North Sea fish species, I have used the values given in Fishbase for thermal ranges (sometimes by clicking on the map). A lot of info is available in Rfishbase but not thermal range. A list for many species is also available in the Supplement of Cheung et al 2013 Nature Climate Change. But in reality these are much wider than the Cheung et al. estimates. For example, North Sea cod tagging studies show a range of -1.5 - 19 degrees C (Righton et al 2010, MEPS).
-   
+
 
 # Load species parameters
 setwd("c:/users/derekt/work/isabellefishery/")
+source("optimization_functions.r")
 
 #species_params = read.csv("thermizer_params.csv")
 species_params = read.csv("thermizer_species_aquamaps.csv")
@@ -256,6 +257,9 @@ params <- newMultispeciesParams(species_params,
    }
    #```
    
+   # Kappa scaling parameter
+   other_params(params)$kappa_scaling = 1000
+   
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
    #it is necessary to divide by the maximum possible value for each species.  
@@ -381,7 +385,7 @@ use_empirical_kappa <- function (params, n, n_pp, n_other, rates, t, dt, ...)
    # Access the correct element
    #kappa_at_t <- params@other_params$other$kappa_forcing[t + params@other_params$other$t_idx,3]
    kappa_at_t <- params@other_params$other$kappa_forcing[ceiling(t)]
-   params@resource_params$kappa <- kappa_at_t
+   params@resource_params$kappa <- kappa_at_t * params@other_params$other$kappa_scaling
    #params@resource_params$kappa <- params@other_params$other$kappa_forcing[t + params@other_params$other$t_idx]
    
    #print(params@resource_params$kappa)
@@ -559,8 +563,6 @@ project <- function (object, effort, t_max = 100, dt = 0.1, t_save = 1,
       r <- rates_fns$Rates(params, n = n, n_pp = n_pp, n_other = n_other, 
                            t = t, effort = effort_dt[i_time, ], rates_fns = rates_fns)
       t <- t + dt
-      print("here")
-      print(t)
       # Not really suitable to go here, but set the knife-edge gear parameter 
       # to essentially zero to represent 0.5 natural mortality on all size
       # classes of cod at 1993 and beyond
@@ -569,7 +571,6 @@ project <- function (object, effort, t_max = 100, dt = 0.1, t_save = 1,
          params@gear_params[2,4] = 0.0001
          params@selectivity[2,2,] = 1
       }
-      print(params@gear_params[2,4])
       if (t)
       n_other_current <- n_other
       for (res in other_names) {
@@ -635,10 +636,24 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 
 
 #``` {r message = FALSE}
-sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+#sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 #sim_IPSL_ssp5rcp85_nat <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fnat)
 
 
+new_Rmax = rep(8.26e+09, length(params@species_params$R_max))
+params_IPSL_ssp5rcp85@species_params$R_max = new_Rmax
+
+#sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+
+ptm <- proc.time()
+aa = optim(new_Rmax, runModel, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+proc.time() - ptm
+
+# Plot model results
+dev.new()
+plot(sim, include_critical = TRUE)
+x =params@species_params
+biomasses_through_time = getBiomass(sim)
 
 #```
 #And plot the results to get a sense of what things look like.
