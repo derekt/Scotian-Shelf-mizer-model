@@ -6,7 +6,10 @@ calculate_sse_time_series <- function(ram_ssb, model_ssb)
   
   # Temporarily remove spin up years
   start_year = which(rownames(model_ssb) == "1970")
-  model_ssb = model_ssb[start_year:dim(model_ssb)[1],]
+  end_year = which(rownames(model_ssb) == "2017")
+  
+  # TEMPORARY
+  model_ssb = model_ssb[start_year:end_year,]
   
   total_sse = 0
   
@@ -29,6 +32,30 @@ runModel <- function(rMax, params, effort, t_max)
   # Put new vector back into species params
   params@species_params$R_max = rMax
   
+  print(params@species_params$R_max)
+  params <- setParams(params)
+  
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort, parscale = re(1e+12))
+  
+  # Extract final biomasses
+  biomasses_through_time = getBiomass(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
+  print(sse_final)
+  return(sse_final)
+}
+
+# Run model just inputting rMax
+runModelKappaScale <- function(kappaScale, params, effort, t_max)
+{
+  # Put new vector back into species params
+  other_params(params)$kappa_scaling = kappaScale
+  
+  print(params@other_params$other$kappa_scaling)
+  params <- setParams(params)
+  
   # Run the model
   sim <- project(params, t_max = t_max, effort = effort)
   
@@ -37,21 +64,29 @@ runModel <- function(rMax, params, effort, t_max)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
+  print(sse_final)
   return(sse_final)
 }
 
 
 
 # Run model inputting rMax and kappa
-runModelMultiOptim <- function(initialParameterValues)
+runModelMultiOptim <- function(initialParameterValues, params, effort, t_max)
 {
   # Put new vector back into species params
   params@species_params$R_max = initialParameterValues[1:9]
-  params@species_params$erepro = initialParameterValues[10:18]
-  params <- setParams(params, kappa = initialParameterValues[19])
+  print(params@species_params$R_max)
+  
+  #params@species_params$erepro = initialParameterValues[10:18]
+  #params <- setParams(params, kappa = initialParameterValues[10])
+  other_params(params)$kappa_scaling =initialParameterValues[10]
+  print(params@species_params$R_max)
+
+  
+  params <- setParams(params)
   
   # Run the model
-  sim <- project(params, effort = relative_effort)
+  sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
   biomasses_through_time = getBiomass(sim)
@@ -62,4 +97,16 @@ runModelMultiOptim <- function(initialParameterValues)
   return(sse_final)
 }
 
-bb = optim(c(new_Rmax, rep(1,9), 1e+11), runModelMultiOptim, method = "L-BFGS-B", lower = c(rep(0,9), rep(0.5,9), 1e+8), upper = c(rep(1000000000000,9), rep(1,9), 1e+14))
+
+# ptm <- proc.time()
+# aa = optim(new_Rmax, runModel2)
+# proc.time() - ptm
+# 
+# cl <- makeCluster(detectCores()-1)
+# setDefaultCluster(cl = cl)
+# clusterExport(cl, c("runModel", "calculate_sse_time_series", "params", "relative_effort", "ram_ssb"))
+# 
+# ptm <- proc.time()
+# aa = optimParallel(par = new_Rmax, fn = runModel, method = "L-BFGS-B", lower = rep(0,9), upper = rep(1e+20, 9))
+# proc.time() - ptm
+# stopCluster(cl)

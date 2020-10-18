@@ -36,6 +36,7 @@
 
 library("mizer")
 library("assertthat")
+library("optimParallel")
 
    
    
@@ -87,7 +88,10 @@ colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(AT
 obs_SSB <- obs_SSB[,1:9]
 
 # TEMPORARILY RESCALE
-obs_SSB <- obs_SSB / 1000
+#obs_SSB <- obs_SSB / 1000
+
+
+species_params[,5] = rep(0.8,9)
 
 # Set up gear params and selectivity function
 
@@ -176,7 +180,7 @@ params <- newMultispeciesParams(species_params,
    
    # Set the 1993 and beyond mortality in cod (representing elevated mortality in all size classes,
    # so simultaneously the knife-edge selection goes down to 1e03g
-   
+      
    effort_array_Fhistsoc[123:dim(effort_array_Fhistsoc)[1],2] = 0.5
    
 
@@ -195,7 +199,7 @@ params <- newMultispeciesParams(species_params,
    # Build temperature arrays following methods used above
    species <- params@species_params$species
    
-    ocean_temp_array_IPSL_CC585 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
+   ocean_temp_array_IPSL_CC585 <- array(NA, dim = c(length(times), length(species)), dimnames = list(time = times, sp = species))
    
    # 
    # for (t in (times - 1349)) {
@@ -265,7 +269,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 1000
+   other_params(params)$kappa_scaling = 0.02
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
@@ -411,6 +415,8 @@ params <- setResource(params, resource_dynamics = "use_empirical_kappa")
 
 #Because temperature and n_pp forcing are parameters, we'll need to make unique `params` objects for each CMIP6 model and climate scenario.  This means we'll have six new `params` objects (2 models x 3 climate scenarios).
 
+
+
 #``` {r}
 # Create parameter objects
 # params_GFDL_picontrol <- params
@@ -425,6 +431,10 @@ other_params(params_IPSL_ssp5rcp85)$kappa_forcings <- c(rep(plankton[1,3],100), 
 other_params(params_IPSL_ssp5rcp85)$ocean_temp <- ocean_temp_array_IPSL_CC585
 
 # ```
+new_Rmax = c(14000000000, 400000000, 3000000000, 9000000000, 10000000000, 9000000000, 10000000000, 6000000000, 9000000000)
+params_IPSL_ssp5rcp85@species_params$R_max = new_Rmax
+
+params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
 
 #Now we can run the simulations.  There are 12 runs here: 3 climate scenarios x 2 fishing scenarios x 2 #CMIP6 models.
 
@@ -646,18 +656,50 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 #sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 #sim_IPSL_ssp5rcp85_nat <- project(params_IPSL_ssp5rcp85, initial_n_pp = n_pp_array_IPSL_CC585[1,], t_max = length(times), effort = effort_array_Fnat)
 
-
-new_Rmax = rep(8.26e+09, length(params@species_params$R_max))
-params_IPSL_ssp5rcp85@species_params$R_max = new_Rmax
-
-
 # Optimize over the parameters
-ptm <- proc.time()
-aa = optim(new_Rmax, runModel, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
-proc.time() - ptm
+# #-------------------------------------
+ ptm <- proc.time()
+ aa = optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)))
+ proc.time() - ptm
 
-# Run the model with the final parameters
-params_IPSL_ssp5rcp85@species_params$R_max = aa$par
+ #ptm <- proc.time()
+ #aa = optim(c(new_Rmax, 1e+11), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+ #proc.time() - ptm
+# 
+#-------------------------------------
+
+# Optimize over the parameters but with LGFS-B
+# # #-------------------------------------
+# ptm <- proc.time()
+# aa = optim(new_Rmax, runModel, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "L-BFGS-B", lower = rep(10000,9), upper = rep(1e+16, 9), control = list(trace = 6))
+# proc.time() - ptm
+# 
+#-------------------------------------
+
+# Optimize in parallel runModel <- function(rMax, params, effort, t_max)
+#-------------------------------------
+# cl <- makeCluster(detectCores()-1)
+# setDefaultCluster(cl = cl)
+# clusterExport(cl, c("runModel", "new_Rmax", "therMizerEReproAndGrowth", "therMizerEncounter", "use_empirical_kappa", "calculate_sse_time_series", "params_IPSL_ssp5rcp85", "effort_array_Fhistsoc", "obs_SSB"))
+# 
+# ptm <- proc.time()
+# aa = optimParallel(par = c(new_Rmax, 0.1), fn = runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "L-BFGS-B", lower = c(rep(100000,9),0.0000001), upper = c(rep(1e+20, 9),1000000))
+# proc.time() - ptm
+# stopCluster(cl)
+
+#-------------------------------------
+
+#-------------------------------------
+# # Run the model with the final parameters
+params_IPSL_ssp5rcp85@species_params$R_max = aa$par[1:9]
+params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = aa$par[10]
+ 
+# load("best_kappa_scaling.Rdata")
+#  params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bsk
+#  load("best_species_params.Rdata")
+#  params_IPSL_ssp5rcp85@species_params = bsp 
+ 
+ 
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
 #```
@@ -783,22 +825,16 @@ dev.new()
 
 #plot(sim_IPSL_ssp5rcp85_histsoc, time_range = 1870:2100, t = 231)
 
-plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
-dev.new()
-
-
-
 # Plot model results
-dev.new()
-plot(sim_IPSL_ssp5rcp85_histsoc, include_critical = TRUE)
-x =params@species_params
-biomasses_through_time = getBiomass(sim)
+
+plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+
 ## FEEDING LEVELS VERY HIGH : CHECK PLANKTON COULD BE RELATIVE TO CALIBRATED? CHECK FISHING ALSO RELATIVE? CHECK CATCHABILTY NOT BEING USED
 ### CHECK GROWTH, CATCHES ETC
 #```
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc.Rdata", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc", ascii = TRUE)
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```

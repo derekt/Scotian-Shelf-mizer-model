@@ -6,7 +6,7 @@
 #load("/Users/isabellehurley/Downloads/model_output.Rdata")
 #load("model_output.Rdata")
 setwd("c:/users/derekt/work/isabellefishery/")
-load("sim_IPSL_ssp5rcp85_histsoc.Rdata")
+#load("sim_IPSL_ssp5rcp85_histsoc.Rdata")
 
 
 #sim=model_output
