@@ -37,10 +37,14 @@ calculate_sse_time_series_normalized <- function(ram_ssb, model_ssb)
   model_ssb = model_ssb[start_year:end_year,]
   
   # Normalize SSB time-series to assign equal weighting to all
+  print(ram_ssb[1,1])
+  print(model_ssb[1,1])
+  
   for (species in 1:dim(model_ssb)[2])
   {
-    ram_ssb[,species] <- ram_ssb[,species] / mean(ram_ssb[,species], na.rm=T)
-    model_ssb[,species] <- model_ssb[,species] / mean(ram_ssb,[,species] na.rm = T)
+    temp_val = mean(ram_ssb[,species], na.rm=T)
+    ram_ssb[,species] <- ram_ssb[,species] / temp_val
+    model_ssb[,species] <- model_ssb[,species] / temp_val
   }
   
   print(ram_ssb[1:5,1])

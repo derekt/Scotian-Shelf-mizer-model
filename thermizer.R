@@ -1,4 +1,3 @@
-# ---
 # title: "run_therMizer_FishMIP"
 # author: "julia.blanchard@utas.edu.au"
 # date: "2/9/2020"
@@ -62,24 +61,25 @@ bottom_temp = read.csv("bottom_temp.csv", header = T)
 plankton = read.csv("plankton_conc.csv", header = T)
 
 # Load the empirical temperature data
-empirical_temp = read.csv("empirical_temperature_data.csv", header = T)
+# empirical_temp = read.csv("empirical_temperature_data.csv", header = T)
+# 
+# # Extract the anomoly from the IPSL data
+# surface_temp = surface_temp - mean(surface_temp[1:48,3])
+# bottom_temp = bottom_temp - mean(bottom_temp[1:48,3])
+# 
+# # Now that we have the anomoly from 2018 to 2020, replace the 1970-2017 with the empirical data
+# surface_temp[1:48,3] = empirical_temp[,5]
+# surface_temp[49:dim(surface_temp)[1],3] = surface_temp[49:dim(surface_temp)[1],3] + mean(empirical_temp[1:48,5])
+# bottom_temp[1:48,3] = empirical_temp[,2]
+# bottom_temp[49:dim(bottom_temp)[1],3] = bottom_temp[49:dim(bottom_temp)[1],3] + mean(empirical_temp[1:48,2])
 
-# Extract the anomoly from the IPSL data
-surface_temp = surface_temp - mean(surface_temp[1:48,3])
-bottom_temp = bottom_temp - mean(bottom_temp[1:48,3])
-
-# Now that we have the anomoly from 2018 to 2020, replace the 1970-2017 with the empirical data
-surface_temp[1:48,3] = empirical_temp[,5]
-surface_temp[49:dim(surface_temp)[1],3] = surface_temp[49:dim(surface_temp)[1],3] + mean(empirical_temp[1:48,5])
-bottom_temp[1:48,3] = empirical_temp[,2]
-bottom_temp[49:dim(bottom_temp)[1],3] = bottom_temp[49:dim(bottom_temp)[1],3] + mean(empirical_temp[1:48,2])
-
+#plot(surface_temp[,2],surface_temp[,3], type = "l")
 # Do the five year smoothing
-yy = as.vector(filter(surface_temp[,3], rep(1/5,5)))
-surface_temp[3:(dim(surface_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
-yy = as.vector(filter(bottom_temp[,3], rep(1/5,5)))
-bottom_temp[3:(dim(bottom_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
-#plot(surface_temp[,3], type = "l", ylim = c(0,21))
+#yy = as.vector(filter(surface_temp[,3], rep(1/5,5)))
+#surface_temp[3:(dim(surface_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
+#yy = as.vector(filter(bottom_temp[,3], rep(1/5,5)))
+#bottom_temp[3:(dim(bottom_temp)[1] - 3),3] = yy[3:(length(yy) - 3)]
+#lines(surface_temp[,2],surface_temp[,3], type = "l", col="blue", lwd = 2)
 #lines(bottom_temp[,3], type = "l", col = "blue")
 
 # Read in the observed SSB
@@ -269,7 +269,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 0.02
+   other_params(params)$kappa_scaling = 0.03
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
@@ -663,7 +663,7 @@ aa = optim(log(new_Rmax), runModelNormalized, params = params_IPSL_ssp5rcp85, t_
 proc.time() - ptm
 
  # ptm <- proc.time()
- # aa = optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)), method = "SANN")
+ # aa =s optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)), method = "SANN")
  # proc.time() - ptm
 
  #ptm <- proc.time()
@@ -690,6 +690,8 @@ proc.time() - ptm
 # aa = optimParallel(par = c(new_Rmax, 0.1), fn = runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "L-BFGS-B", lower = c(rep(100000,9),0.0000001), upper = c(rep(1e+20, 9),1000000))
 # proc.time() - ptm
 # stopCluster(cl)
+params_IPSL_ssp5rcp85@species_params$R_max = exp(aa$par[1:9])
+
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
 #-------------------------------------
@@ -839,6 +841,84 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero2", ascii = TRUE)
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```
+
+# 
+# # Run model w / wo temperature and productivity changes
+# #Full model
+# dev.new()
+# dev.new()
+# load("sim_IPSL_ssp5rcp85_histsoc_ptzero2")
+# params_IPSL_ssp5rcp85 = sim_IPSL_ssp5rcp85_histsoc@params
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+# 
+# dev.new()
+# load("sim_IPSL_ssp5rcp85_histsoc_ptzero2")
+# params_IPSL_ssp5rcp85 = sim_IPSL_ssp5rcp85_histsoc@params
+# 
+# params_IPSL_ssp5rcp85 <- setRateFunction(params_IPSL_ssp5rcp85, "Encounter", "mizerEncounter")
+# params_IPSL_ssp5rcp85 <- setRateFunction(params_IPSL_ssp5rcp85, "EReproAndGrowth", "mizerEReproAndGrowth")
+# params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+# 
+# dev.new()
+# load("sim_IPSL_ssp5rcp85_histsoc_ptzero2")
+# 
+# params_IPSL_ssp5rcp85 = sim_IPSL_ssp5rcp85_histsoc@params
+# 
+# params_IPSL_ssp5rcp85<- setResource(params_IPSL_ssp5rcp85, resource_dynamics = "resource_semichemostat")
+# params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
+# 
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+# 
+# 
+# dev.new()
+# load("sim_IPSL_ssp5rcp85_histsoc_ptzero2")
+# 
+# params_IPSL_ssp5rcp85 = sim_IPSL_ssp5rcp85_histsoc@params
+# 
+# params_IPSL_ssp5rcp85<- setResource(params_IPSL_ssp5rcp85, resource_dynamics = "resource_semichemostat")
+# params_IPSL_ssp5rcp85 <- setRateFunction(params_IPSL_ssp5rcp85, "Encounter", "mizerEncounter")
+# params_IPSL_ssp5rcp85 <- setRateFunction(params_IPSL_ssp5rcp85, "EReproAndGrowth", "mizerEReproAndGrowth")
+# params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
+# 
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+# 
+# 
+# dev.new()
+# load("sim_IPSL_ssp5rcp85_histsoc_ptzero2")
+#    ``
+# params_IPSL_ssp5rcp85 = sim_IPSL_ssp5rcp85_histsoc@params
+# 
+# params<- setResource(params, resource_dynamics = "resource_semichemostat")
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+# 
+# 
+# 
+# 
+# dev.new()
+# dev.new()
+# load("sim_IPSL_ssp5rcp85_histsoc_ptzero2")
+# 
+# params_IPSL_ssp5rcp85 = sim_IPSL_ssp5rcp85_histsoc@params
+# 
+# #params_IPSL_ssp5rcp85<- setResource(params_IPSL_ssp5rcp85, resource_dynamics = "resource_semichemostat")
+# params_IPSL_ssp5rcp85 <- setRateFunction(params_IPSL_ssp5rcp85, "Encounter", "mizerEncounter")
+# params_IPSL_ssp5rcp85 <- setRateFunction(params_IPSL_ssp5rcp85, "EReproAndGrowth", "mizerEReproAndGrowth")
+# params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
+# 
+# sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+
+# Without temperature
+
+# Without productivity
+
+# Both turned of

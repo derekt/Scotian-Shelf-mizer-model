@@ -198,7 +198,6 @@ for (ii in 1:9)
   dev.new()
   min_biomass = min(min(obs_catch[,ii], na.rm=T), min(min(pred_yield[,ii])))
   max_biomass = max(max(obs_catch[,ii], na.rm=T), max(max(pred_yield[,ii])))
-  
   par(mfrow = c(2,1))
   plot(years, obs_catch[,ii], xlab = "Year", ylab = "catch", type = "l", ylim = c(min_biomass, max_biomass), main = catch_pred_obs$species[ii])
   lines(years, pred_yield[,ii], col= "red")
