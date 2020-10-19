@@ -48,7 +48,8 @@ library("optimParallel")
 
 
 # Load species parameters
-setwd("c:/users/derekt/work/isabellefishery/")
+#setwd("c:/users/derekt/work/isabellefishery/")
+setwd("c:/users/derek/documents/github/chapter3")
 source("optimization_functions.r")
 
 #species_params = read.csv("thermizer_params.csv")
@@ -83,7 +84,7 @@ plankton = read.csv("plankton_conc.csv", header = T)
 #lines(bottom_temp[,3], type = "l", col = "blue")
 
 # Read in the observed SSB
-obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
+obs_SSB = as(read.csv("SSB_total_grams.csv", row.names = 1), "matrix")
 colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 obs_SSB <- obs_SSB[,1:9]
 
@@ -269,7 +270,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 0.03
+   other_params(params)$kappa_scaling = 0.02
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
