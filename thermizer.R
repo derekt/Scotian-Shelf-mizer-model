@@ -658,9 +658,13 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 
 # Optimize over the parameters
 # #-------------------------------------
- ptm <- proc.time()
- aa = optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)))
- proc.time() - ptm
+ptm <- proc.time()
+aa = optim(log(new_Rmax), runModelNormalized, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+proc.time() - ptm
+
+ # ptm <- proc.time()
+ # aa = optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)), method = "SANN")
+ # proc.time() - ptm
 
  #ptm <- proc.time()
  #aa = optim(c(new_Rmax, 1e+11), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
@@ -686,6 +690,7 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 # aa = optimParallel(par = c(new_Rmax, 0.1), fn = runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "L-BFGS-B", lower = c(rep(100000,9),0.0000001), upper = c(rep(1e+20, 9),1000000))
 # proc.time() - ptm
 # stopCluster(cl)
+sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
 #-------------------------------------
 
@@ -700,7 +705,6 @@ params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = aa$par[10]
 #  params_IPSL_ssp5rcp85@species_params = bsp 
  
  
-sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
 #```
 #And plot the results to get a sense of what things look like.
