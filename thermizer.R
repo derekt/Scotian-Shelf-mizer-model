@@ -659,8 +659,12 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 
 # Optimize over the parameters
 # #-------------------------------------
+# ptm <- proc.time()
+# aa = optim(log(new_Rmax), runModelNormalized, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# proc.time() - ptm
+
 ptm <- proc.time()
-aa = optim(log(new_Rmax), runModelNormalized, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+aa = optim(c(log(new_Rmax), rep(1.5,9)), runModelNormalizedeRepro, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
 
  # ptm <- proc.time()
@@ -692,6 +696,8 @@ proc.time() - ptm
 # proc.time() - ptm
 # stopCluster(cl)
 params_IPSL_ssp5rcp85@species_params$R_max = exp(aa$par[1:9])
+params_IPSL_ssp5rcp85@species_params$f0 = 1 / (1 + exp(-aa$par[10:18]))
+params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
 
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 
@@ -699,8 +705,8 @@ sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(time
 
 #-------------------------------------
 # # Run the model with the final parameters
-params_IPSL_ssp5rcp85@species_params$R_max = aa$par[1:9]
-params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = aa$par[10]
+#params_IPSL_ssp5rcp85@species_params$R_max = aa$par[1:9]
+#params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = aa$par[10]
  
 # load("best_kappa_scaling.Rdata")
 #  params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bsk
@@ -842,7 +848,7 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero2", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero2_plus_f0_optim", ascii = TRUE)
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```
 
