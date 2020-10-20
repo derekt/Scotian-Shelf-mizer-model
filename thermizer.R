@@ -269,7 +269,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 0.03
+   other_params(params)$kappa_scaling = 0.015
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
@@ -698,8 +698,8 @@ sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(time
 
 #-------------------------------------
 # # Run the model with the final parameters
-params_IPSL_ssp5rcp85@species_params$R_max = aa$par[1:9]
-params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = aa$par[10]
+# params_IPSL_ssp5rcp85@species_params$R_max = aa$par[1:9]
+# params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = aa$par[10]
  
 # load("best_kappa_scaling.Rdata")
 #  params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bsk
@@ -841,7 +841,7 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero2", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero15", ascii = TRUE)
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```
 
