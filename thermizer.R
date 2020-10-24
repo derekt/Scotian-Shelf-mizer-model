@@ -84,7 +84,7 @@ plankton = read.csv("plankton_conc.csv", header = T)
 
 # Read in the observed SSB
 obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
-colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
+colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'TURBOT,GREENLAND HALIBUT', 'WITCH FLOUNDER', 'YELLOWTAIL FLOUNDER')
 obs_SSB <- obs_SSB[,1:9]
 
 # TEMPORARILY RESCALE
@@ -106,7 +106,7 @@ gear_params <-
              sel_func = "selectivity_function")
 
 gear_params$catchability <- rep(1,dim(gear_params)[2])
-View(gear_params)
+#View(gear_params)
 # Create the params object 
 params <- newMultispeciesParams(species_params, 
                                 kappa = 1e11,
@@ -269,7 +269,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 0.015
+   other_params(params)$kappa_scaling = 0.017
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
@@ -841,7 +841,7 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero15", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero17", ascii = TRUE)
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```
 

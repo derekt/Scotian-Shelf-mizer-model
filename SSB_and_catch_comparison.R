@@ -23,13 +23,16 @@ params@species_params
 f_history  = as(read.csv("therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
 head(f_history)
 
+# Replace the mortality > 1 with a value of 0.9
+f_history[f_history >=1] = 0.9
+
 f_history <- f_history[,1:9]
 head(f_history)
 class(f_history)
 colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
 
 obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
-colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
+colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'TURBOT,GREENLAND HALIBUT', 'WITCH FLOUNDER', 'YELLOWTAIL FLOUNDER')
 obs_SSB <- obs_SSB[,1:9]
 
 ## check obs vs. predicted SSB
@@ -160,7 +163,7 @@ for (ii in 1:9)
 
 obs_catch <- as(read.csv("therm_obs_catch_best_option.csv", row.names = 1), "matrix")
 
-colnames(obs_catch) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
+colnames(obs_catch) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'TURBOT,GREENLAND HALIBUT', 'WITCH FLOUNDER', 'YELLOWTAIL FLOUNDER')
 obs_catch <- obs_catch[,1:9]
 
 ## check obs vs. predicted catch
