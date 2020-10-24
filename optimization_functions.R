@@ -111,7 +111,6 @@ runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
   # Put new vector back into species params
   params@species_params$R_max = exp(param_values[1:9])
   params@species_params$f0 = 1 / (1 + exp(-(param_values[10:18])))
-  
   print(params@species_params$f0)
   params <- setParams(params)
   
@@ -126,6 +125,30 @@ runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
   print(sse_final)
   return(sse_final)
 }
+
+# Run model just inputting rMax
+runModelNormalizedeReproKappa <- function(param_values, params, effort, t_max)
+{
+  # Put new vector back into species params
+  params@species_params$R_max = exp(param_values[1:9])
+  params@species_params$f0 = 1 / (1 + exp(-(param_values[10:18])))
+  params@other_params$other$kappa_scaling = exp(param_values[19])
+  print(params@species_params$f0)
+  print(params@other_params$other$kappa_scaling)
+  params <- setParams(params)
+  
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort)
+  
+  # Extract final biomasses
+  biomasses_through_time = getBiomass(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
+  print(sse_final)
+  return(sse_final)
+}
+
 
 # # Run model just inputting kappa scaling
 # runModelKappaScale <- function(kappaScale, params, effort, t_max)
@@ -177,6 +200,74 @@ runModelMultiOptim <- function(initialParameterValues, params, effort, t_max)
   return(sse_final)
 }
 
+# Run model just inputting rMax
+runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
+{
+  # Put new vector back into species params
+  params@species_params$R_max = exp(param_values[1:9])
+  params@species_params$f0 = 1 / (1 + exp(-(param_values[10:18])))
+  
+  print(params@species_params$f0)
+  params <- setParams(params)
+  
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort)
+  
+  # Extract final biomasses
+  biomasses_through_time = getBiomass(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
+  print(sse_final)
+  return(sse_final)
+}
+
+# # Run model just inputting kappa scaling
+# runModelKappaScale <- function(kappaScale, params, effort, t_max)
+# {
+#   # Put new vector back into species params
+#   other_params(params)$kappa_scaling = kappaScale
+#   
+#   print(params@other_params$other$kappa_scaling)
+#   params <- setParams(params)
+#   
+#   # Run the model
+#   sim <- project(params, t_max = t_max, effort = effort)
+#   
+#   # Extract final biomasses
+#   biomasses_through_time = getBiomass(sim)
+#   
+#   # Calculate SSE
+#   sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
+#   print(sse_final)
+#   return(sse_final)
+# }
+
+
+
+# Run model just inputting rMax
+runModelMultiOptimf0 <- function(param_values, params, effort, t_max)
+{
+  # Put new vector back into species params
+  params@species_params$R_max = exp(param_values[1:9])
+  params@species_params$f0 = 1 / (1 + exp(-(param_values[10:18])))
+  params@other_params$other$kappa_scaling = exp(param_values[19])
+  
+  print(params@species_params$f0)
+  print(params@other_params$other$kappa_scaling)
+  params <- setParams(params)
+  
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort)
+  
+  # Extract final biomasses
+  biomasses_through_time = getBiomass(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
+  print(sse_final)
+  return(sse_final)
+}
 
 # ptm <- proc.time()
 # aa = optim(new_Rmax, runModel2)
