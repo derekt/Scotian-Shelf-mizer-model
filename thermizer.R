@@ -664,7 +664,7 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 # proc.time() - ptm
 
 ptm <- proc.time()
-aa = optim(c(log(new_Rmax), 0.017), runModelNormalizedeRepro, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+aa = optim(c(log(new_Rmax)), runModelNormalized, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
 
 # ptm <- proc.time()
