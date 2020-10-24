@@ -270,7 +270,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 0.02
+   other_params(params)$kappa_scaling = 0.017
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
@@ -664,8 +664,12 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 # proc.time() - ptm
 
 ptm <- proc.time()
-aa = optim(c(log(new_Rmax), rep(1.5,9)), runModelNormalizedeRepro, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+aa = optim(c(log(new_Rmax), 0.017), runModelNormalizedeRepro, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
+
+# ptm <- proc.time()
+# aa = optim(c(log(new_Rmax), rep(1.5,9), log(0.015)), runModelNormalizedeReproKappa, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# proc.time() - ptm
 
  # ptm <- proc.time()
  # aa =s optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)), method = "SANN")
@@ -697,6 +701,7 @@ proc.time() - ptm
 # stopCluster(cl)
 params_IPSL_ssp5rcp85@species_params$R_max = exp(aa$par[1:9])
 params_IPSL_ssp5rcp85@species_params$f0 = 1 / (1 + exp(-aa$par[10:18]))
+params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = exp(aa$par[19])
 params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
 
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
@@ -848,7 +853,7 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero2_plus_f0_optim", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero17_plus_f0_optim", ascii = TRUE)
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```
 
