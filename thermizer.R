@@ -269,7 +269,7 @@ params <- newMultispeciesParams(species_params,
    #```
    
    # Kappa scaling parameter
-   other_params(params)$kappa_scaling = 0.017
+   other_params(params)$kappa_scaling = 0.019
    
    
 #   To scale the effect of temperature on encounter rate to a value ranging from 0 - 1, 
@@ -658,8 +658,18 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 
 # Optimize over the parameters
 # #-------------------------------------
+#ptm <- proc.time()
+#aa = optim(log(new_Rmax), runModelNormalized, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+#proc.time() - ptm
+
+# params_IPSL_ssp5rcp85@species_params$R_max = exp(aa$par)
+# ptm <- proc.time()
+# bb = optim(0.2, runModelKappaScale, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "Brent", lower = 0.01, upper = 2)
+# proc.time() - ptm
+
+params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bb$par
 ptm <- proc.time()
-aa = optim(log(new_Rmax), runModelNormalized, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+cc = optim(runif(9), runModelNormalizedf0, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
 
  # ptm <- proc.time()
@@ -690,10 +700,11 @@ proc.time() - ptm
 # aa = optimParallel(par = c(new_Rmax, 0.1), fn = runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "L-BFGS-B", lower = c(rep(100000,9),0.0000001), upper = c(rep(1e+20, 9),1000000))
 # proc.time() - ptm
 # stopCluster(cl)
-params_IPSL_ssp5rcp85@species_params$R_max = exp(aa$par[1:9])
+#params_IPSL_ssp5rcp85@species_params$R_max = exp(aa$par[1:9])
+#params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bb$par
+params_IPSL_ssp5rcp85@species_params$erepro = 1 / (1 + exp(-(cc$par)))
 
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
-
 #-------------------------------------
 
 #-------------------------------------
@@ -841,7 +852,9 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_ptzero17", ascii = TRUE)
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_Rmaxedatpt19_then_kappa_thenerepro.Rdata")
+write.csv(cc$par,"sim_IPSL_ssp5rcp85_histsoc_Rmaxedatpt19_then_kappathen_erepro.csv")
+
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```
 

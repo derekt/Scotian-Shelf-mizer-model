@@ -20,7 +20,6 @@ calculate_sse_time_series <- function(ram_ssb, model_ssb)
     
     # Calculate sum of squares and add to the running total
     total_sse = total_sse + sum((ram_ssb[not_na_years, species] - model_ssb[not_na_years, species])^2)
-    
   }
   return(total_sse)
 }
@@ -37,8 +36,6 @@ calculate_sse_time_series_normalized <- function(ram_ssb, model_ssb)
   model_ssb = model_ssb[start_year:end_year,]
   
   # Normalize SSB time-series to assign equal weighting to all
-  print(ram_ssb[1,1])
-  print(model_ssb[1,1])
   
   for (species in 1:dim(model_ssb)[2])
   {
@@ -47,8 +44,7 @@ calculate_sse_time_series_normalized <- function(ram_ssb, model_ssb)
     model_ssb[,species] <- model_ssb[,species] / temp_val
   }
   
-  print(ram_ssb[1:5,1])
-  print(model_ssb[1:5,1])
+
   total_sse = 0
   
   # Loop through species
@@ -58,7 +54,14 @@ calculate_sse_time_series_normalized <- function(ram_ssb, model_ssb)
     
     # Calculate sum of squares and add to the running total
     total_sse = total_sse + sum((ram_ssb[not_na_years, species] - model_ssb[not_na_years, species])^2)
-    
+    if (species == 3)
+      {
+      #print(mean(ram_ssb[,species], na.rm = T))
+      #print(model_ssb[not_na_years,species])
+      #print(ram_ssb[not_na_years, species])
+      print(log(total_sse))
+
+      }
   }
   return(total_sse)
 }
@@ -76,7 +79,7 @@ runModel <- function(rMax, params, effort, t_max)
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
@@ -90,18 +93,16 @@ runModelNormalized <- function(rMax, params, effort, t_max)
   # Put new vector back into species params
   params@species_params$R_max = exp(rMax)
   
-  print(params@species_params$R_max)
   params <- setParams(params)
   
   # Run the model
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
-  print(sse_final)
   return(sse_final)
 }
 
@@ -118,11 +119,10 @@ runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
-  print(sse_final)
   return(sse_final)
 }
 
@@ -141,7 +141,7 @@ runModelNormalizedeReproKappa <- function(param_values, params, effort, t_max)
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
@@ -151,25 +151,23 @@ runModelNormalizedeReproKappa <- function(param_values, params, effort, t_max)
 
 
 # # Run model just inputting kappa scaling
-# runModelKappaScale <- function(kappaScale, params, effort, t_max)
-# {
-#   # Put new vector back into species params
-#   other_params(params)$kappa_scaling = kappaScale
-#   
-#   print(params@other_params$other$kappa_scaling)
-#   params <- setParams(params)
-#   
-#   # Run the model
-#   sim <- project(params, t_max = t_max, effort = effort)
-#   
-#   # Extract final biomasses
-#   biomasses_through_time = getBiomass(sim)
-#   
-#   # Calculate SSE
-#   sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
-#   print(sse_final)
-#   return(sse_final)
-# }
+runModelKappaScale <- function(kappaScale, params, effort, t_max)
+{
+  # Put new vector back into species params
+  other_params(params)$kappa_scaling = kappaScale
+
+  params <- setParams(params)
+
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort)
+
+  # Extract final biomasses
+  biomasses_through_time = getSSB(sim)
+
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
+  return(sse_final)
+}
 
 
 
@@ -192,7 +190,7 @@ runModelMultiOptim <- function(initialParameterValues, params, effort, t_max)
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   
   # Calculate SSE
@@ -200,6 +198,25 @@ runModelMultiOptim <- function(initialParameterValues, params, effort, t_max)
   return(sse_final)
 }
 
+# Run model just inputting rMax
+runModelNormalizedf0 <- function(param_values, params, effort, t_max)
+{
+  # Put new vector back into species params
+  params@species_params$erepro = 1 / (1 + exp(-(param_values[1:9])))
+  
+  print(params@species_params$erepro)
+  params <- setParams(params)
+  
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort)
+  
+  # Extract final biomasses
+  biomasses_through_time = getSSB(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
+  return(sse_final)
+}
 # Run model just inputting rMax
 runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
 {
@@ -214,7 +231,7 @@ runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
@@ -261,7 +278,7 @@ runModelMultiOptimf0 <- function(param_values, params, effort, t_max)
   sim <- project(params, t_max = t_max, effort = effort)
   
   # Extract final biomasses
-  biomasses_through_time = getBiomass(sim)
+  biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
