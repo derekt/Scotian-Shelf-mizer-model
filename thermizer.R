@@ -667,10 +667,15 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 # bb = optim(0.2, runModelKappaScale, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "Brent", lower = 0.01, upper = 2)
 # proc.time() - ptm
 
-params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bb$par
+# params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = bb$par
+# ptm <- proc.time()
+# cc = optim(runif(9), runModelNormalizedf0, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+# proc.time() - ptm
+
 ptm <- proc.time()
-cc = optim(runif(9), runModelNormalizedf0, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+dd = optim(c(log(new_Rmax), runif(9), 0.2), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
+
 
  # ptm <- proc.time()
  # aa =s optim(c(new_Rmax, 1), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, control = list(parscale = c(1e11,1e9,1e10,1e10,1e11,1e10,1e11,1e10,1e10,0.02)), method = "SANN")
@@ -852,8 +857,8 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_Rmaxedatpt19_then_kappa_thenerepro.Rdata")
-write.csv(cc$par,"sim_IPSL_ssp5rcp85_histsoc_Rmaxedatpt19_then_kappathen_erepro.csv")
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_Rmax_kappa_erepro_multioptim.Rdata")
+write.csv(dd$par,"sim_IPSL_ssp5rcp85_histsoc_Rmax_kappa_erepro_multioptim.csv")
 
 #save(sim_IPSL_ssp5rcp85_nat, file = "sim_IPSL_ssp5rcp85_nat.Rdata", ascii = TRUE)
 #```

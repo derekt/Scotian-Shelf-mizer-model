@@ -60,7 +60,6 @@ calculate_sse_time_series_normalized <- function(ram_ssb, model_ssb)
       #print(model_ssb[not_na_years,species])
       #print(ram_ssb[not_na_years, species])
       print(log(total_sse))
-
       }
   }
   return(total_sse)
@@ -263,11 +262,11 @@ runModelNormalizedeRepro <- function(param_values, params, effort, t_max)
 
 
 # Run model just inputting rMax
-runModelMultiOptimf0 <- function(param_values, params, effort, t_max)
+runModelMultiOptim <- function(param_values, params, effort, t_max)
 {
   # Put new vector back into species params
   params@species_params$R_max = exp(param_values[1:9])
-  params@species_params$f0 = 1 / (1 + exp(-(param_values[10:18])))
+  params@species_params$erepro = 1 / (1 + exp(-(param_values[10:18])))
   params@other_params$other$kappa_scaling = exp(param_values[19])
   
   print(params@species_params$f0)
@@ -282,7 +281,6 @@ runModelMultiOptimf0 <- function(param_values, params, effort, t_max)
   
   # Calculate SSE
   sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
-  print(sse_final)
   return(sse_final)
 }
 
