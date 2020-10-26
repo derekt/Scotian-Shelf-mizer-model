@@ -704,12 +704,13 @@ proc.time() - ptm
 # aa = optimParallel(par = c(new_Rmax, 0.1), fn = runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc, method = "L-BFGS-B", lower = c(rep(100000,9),0.0000001), upper = c(rep(1e+20, 9),1000000))
 # proc.time() - ptm
 # stopCluster(cl)
+
 params_IPSL_ssp5rcp85@species_params$R_max = exp(dd$par[1:9])
 params_IPSL_ssp5rcp85@species_params$erepro = 1 / (1 + exp(-(dd$par[10:18])))
 params_IPSL_ssp5rcp85@species_params$X.beta = exp(dd$par[19:27])
 params_IPSL_ssp5rcp85@species_params$sigma = exp(dd$par[28:36])
 params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = exp(dd$par[37])
-
+params_IPSL_ssp5rcp85 <- setParams(params_IPSL_ssp5rcp85)
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 #-------------------------------------
 

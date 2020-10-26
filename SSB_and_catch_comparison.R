@@ -7,12 +7,18 @@
 #load("model_output.Rdata")
 setwd("c:/users/derekt/work/isabellefishery/")
 #load("sim_IPSL_ssp5rcp85_histsoc.Rdata")
+#sim_IPSL_ssp5rcp85_histsoc@params@other_params$other$kappa_scaling
+#sim_IPSL_ssp5rcp85_histsoc <- project(sim_IPSL_ssp5rcp85_histsoc@params, t_max = length(times), effort = effort_array_Fhistsoc)
 
 
 #sim=model_outpuat
 plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
+dev.new()
+
 params=sim_IPSL_ssp5rcp85_histsoc@params
 params@species_params
+
+
 
 
 #Oct 4th
@@ -22,6 +28,8 @@ params@species_params
 #f_history  = as(read.csv("Desktop/f_history_no_blanks.csv", row.names = 1), "matrix")
 f_history  = as(read.csv("therm_f_best_option_no_blanks.csv", row.names = 1), "matrix")
 head(f_history)
+f_history[23:dim(f_history)[1],2] = 0.5
+
 
 # Replace the mortality > 1 with a value of 0.9
 f_history[f_history >=1] = 0.9
@@ -29,7 +37,7 @@ f_history[f_history >=1] = 0.9
 f_history <- f_history[,1:9]
 head(f_history)
 class(f_history)
-colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'WITCH FLOUNDER', 'TURBOT,GREENLAND HALIBUT', 'YELLOWTAIL FLOUNDER')
+colnames(f_history) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'TURBOT,GREENLAND HALIBUT', 'WITCH FLOUNDER', 'YELLOWTAIL FLOUNDER')
 
 obs_SSB = as(read.csv("c:/users/derekt/work/isabellefishery/SSB_total_grams.csv", row.names = 1), "matrix")
 colnames(obs_SSB) <- c('AMERICAN PLAICE', 'COD(ATLANTIC)','HADDOCK', 'HERRING(ATLANTIC)', 'REDFISH UNSEPARATED', 'SPINY DOGFISH', 'TURBOT,GREENLAND HALIBUT', 'WITCH FLOUNDER', 'YELLOWTAIL FLOUNDER')
@@ -64,7 +72,7 @@ names(ssb_pred_obs_fish) = c( "pred", "obs", "fishing mortality", "species")
 
 
 library(ggplot2)
-p <- ggplot() + # plot predicted and observed yields
+p <- ggplot() + # plot predicted and observed biomasses
   geom_point(data = ssb_pred_obs_fish, 
              aes(x = log10(pred),  y = log10(obs), color = species)) +
   # plot optimal fit line
@@ -88,6 +96,21 @@ for (ii in 1:9)
   lines(years, pred_SSB[,ii], col= "red")
   legend("topright", legend = c("Predicted SSB", "Observed SSB"), col = c("red", "black"), lty=1, cex=0.8)
   plot(years, f_history[,ii], xlab = "Year", ylab = "fishing mortality", type = "l", ylim = c(0, 1))
+  
+}
+
+
+years = 1970:2017
+for (ii in 1:9)
+{
+  dev.new()
+  min_biomass = min(min(log(obs_SSB[,ii] + 1), na.rm = T), min(min(log(pred_SSB[,ii]), na.rm = T)))
+  max_biomass = max(max(log(obs_SSB[,ii]), na.rm=T), max(max(log(pred_SSB[,ii]), na.rm = T)))
+  par(mfrow = c(2,1))
+  plot(years, log(obs_SSB[,ii]), xlab = "Year", ylab = "log(SSB)", type = "l", ylim = c(min_biomass, max_biomass), main = ssb_pred_obs$species[ii])
+  lines(years, log(pred_SSB[,ii]), col= "red")
+  legend("topright", legend = c("Predicted SSB", "Observed SSB"), col = c("red", "black"), lty=1, cex=0.8)
+  plot(years, log(f_history[,ii]), xlab = "Year", ylab = "log(fishing mortality)", type = "l")
   
 }
 
@@ -218,4 +241,26 @@ for (ii in 1:9)
   plot(years, f_history[,ii], xlab = "Year", ylab = "fishing moratlity", type = "l", ylim = c(0, 1))
   
 }
+
+for (ii in 1:9)
+{
+  print(colnames(obs_catch)[ii])
+  print(cor(pred_yield[,ii], obs_catch[,ii], use = "complete.obs"))
+}
+
+
+years = 1970:2017
+for (ii in 1:9)
+{
+  dev.new()
+  min_biomass = min(min(log(obs_catch[,ii] + 1), na.rm = T), min(min(log(pred_yield[,ii]), na.rm = T)))
+  max_biomass = max(max(log(obs_catch[,ii]), na.rm=T), max(max(log(pred_yield[,ii]), na.rm = T)))
+  par(mfrow = c(2,1))
+  plot(years, log(obs_catch[,ii]), xlab = "Year", ylab = "log(catch)", type = "l", ylim = c(min_biomass, max_biomass), main = catch_pred_obs$species[ii])
+  lines(years, log(pred_yield[,ii]), col= "red")
+  legend("topright", legend = c("Predicted catch", "Observed catch"), col = c("red", "black"), lty=1, cex=0.8)
+  plot(years, log(f_history[,ii] + 0.0001), xlab = "Year", ylab = "log(fishing moratlity)", type = "l")
+  
+}
+
 
