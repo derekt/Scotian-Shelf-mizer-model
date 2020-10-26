@@ -9,7 +9,7 @@ setwd("c:/users/derekt/work/isabellefishery/")
 #load("sim_IPSL_ssp5rcp85_histsoc.Rdata")
 
 
-#sim=model_output
+#sim=model_outpuat
 plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 params=sim_IPSL_ssp5rcp85_histsoc@params
 params@species_params
@@ -63,6 +63,16 @@ ssb_pred_obs_fish <- as.data.frame(ssb_pred_obs_fish)
 names(ssb_pred_obs_fish) = c( "pred", "obs", "fishing mortality", "species")
 
 
+library(ggplot2)
+p <- ggplot() + # plot predicted and observed yields
+  geom_point(data = ssb_pred_obs_fish, 
+             aes(x = log10(pred),  y = log10(obs), color = species)) +
+  # plot optimal fit line
+  geom_abline(color = "black", slope = 1, intercept = 0) + 
+  xlab("log10 Predicted SSB") + 
+  ylab("log10 Observed SSB") #+
+#scale_fill_manual(values = wes_palette(12, "Zissou")) 
+plot(p)
 
 #^ok great, so now observed SSB, predicted SSB and observed fishing mortality are all in the same dataframe
 #now let's make a plot with 3 panels

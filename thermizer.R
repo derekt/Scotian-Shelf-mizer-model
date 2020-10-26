@@ -673,7 +673,7 @@ inner_project_loop <- function(no_sp, no_w, n, A, B, S, w_min_idx) {
 # proc.time() - ptm
 
 ptm <- proc.time()
-dd = optim(c(log(new_Rmax), runif(9), 0.2), runModelMultiOptim, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
+dd = optim(c(log(new_Rmax), runif(9), rep(log(1000), 9), rep(log(1),9), 0.2), runModelMultiOptimAll, params = params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 proc.time() - ptm
 
 # ptm <- proc.time()
@@ -705,8 +705,11 @@ proc.time() - ptm
 # proc.time() - ptm
 # stopCluster(cl)
 params_IPSL_ssp5rcp85@species_params$R_max = exp(dd$par[1:9])
-params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = exp(dd$par[19])
 params_IPSL_ssp5rcp85@species_params$erepro = 1 / (1 + exp(-(dd$par[10:18])))
+params_IPSL_ssp5rcp85@species_params$X.beta = exp(dd$par[19:27])
+params_IPSL_ssp5rcp85@species_params$sigma = exp(dd$par[28:36])
+params_IPSL_ssp5rcp85@other_params$other$kappa_scaling = exp(dd$par[37])
+
 sim_IPSL_ssp5rcp85_histsoc <- project(params_IPSL_ssp5rcp85, t_max = length(times), effort = effort_array_Fhistsoc)
 #-------------------------------------
 
@@ -855,8 +858,8 @@ plotBiomass(sim_IPSL_ssp5rcp85_histsoc)
 #After checking through the code and results to make sure everything worked, we'll save the `sim` objects so that we can prepare the output as FishMIP requests.
 
 #```{r}
-save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_Rmax_kappa_erepro_multioptim_nonorm.Rdata")
-write.csv(dd$par,"sim_IPSL_ssp5rcp85_histsoc_Rmax_kappa_erepro_multioptim_nonorm.csv")
+save(sim_IPSL_ssp5rcp85_histsoc, file = "sim_IPSL_ssp5rcp85_histsoc_Rmax_kap_erep_bet_sig_multioptim_nonorm.Rdata")
+write.csv(dd$par,"sim_IPSL_ssp5rcp85_histsoc_Rmax_kap_erep_bet_sig_multioptim_nonorm.csv")
 
 
 

@@ -20,14 +20,8 @@ calculate_sse_time_series <- function(ram_ssb, model_ssb)
     
     # Calculate sum of squares and add to the running total
     total_sse = total_sse + sum((ram_ssb[not_na_years, species] - model_ssb[not_na_years, species])^2)
-    if (species == 3)
-    {
-      #print(mean(ram_ssb[,species], na.rm = T))
-      #print(model_ssb[not_na_years,species])
-      #print(ram_ssb[not_na_years, species])
-      print(log(total_sse))
-    }
   }
+  print(total_sse)
   return(total_sse)
 }
 
@@ -248,6 +242,30 @@ runModelMultiOptim <- function(param_values, params, effort, t_max)
   params@species_params$R_max = exp(param_values[1:9])
   params@species_params$erepro = 1 / (1 + exp(-(param_values[10:18])))
   params@other_params$other$kappa_scaling = exp(param_values[19])
+  
+  params <- setParams(params)
+  
+  # Run the model
+  sim <- project(params, t_max = t_max, effort = effort)
+  
+  # Extract final biomasses
+  biomasses_through_time = getSSB(sim)
+  
+  # Calculate SSE
+  sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
+  return(sse_final)
+}
+
+
+# Run model just inputting rMax
+runModelMultiOptimAll <- function(param_values, params, effort, t_max)
+{
+  # Put new vector back into species params
+  params@species_params$R_max = exp(param_values[1:9])
+  params@species_params$erepro = 1 / (1 + exp(-(param_values[10:18])))
+  params@species_params$X.beta = exp(param_values[19:27])
+  params@species_params$sigma = exp(param_values[28:36])
+  params@other_params$other$kappa_scaling = exp(param_values[37])
   
   params <- setParams(params)
   
