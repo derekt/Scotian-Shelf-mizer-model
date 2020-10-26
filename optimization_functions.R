@@ -20,6 +20,13 @@ calculate_sse_time_series <- function(ram_ssb, model_ssb)
     
     # Calculate sum of squares and add to the running total
     total_sse = total_sse + sum((ram_ssb[not_na_years, species] - model_ssb[not_na_years, species])^2)
+    if (species == 3)
+    {
+      #print(mean(ram_ssb[,species], na.rm = T))
+      #print(model_ssb[not_na_years,species])
+      #print(ram_ssb[not_na_years, species])
+      print(log(total_sse))
+    }
   }
   return(total_sse)
 }
@@ -170,33 +177,6 @@ runModelKappaScale <- function(kappaScale, params, effort, t_max)
 
 
 
-# Run model inputting rMax and kappa
-runModelMultiOptim <- function(initialParameterValues, params, effort, t_max)
-{
-  # Put new vector back into species params
-  params@species_params$R_max = initialParameterValues[1:9]
-  print(params@species_params$R_max)
-  
-  #params@species_params$erepro = initialParameterValues[10:18]
-  #params <- setParams(params, kappa = initialParameterValues[10])
-  other_params(params)$kappa_scaling =initialParameterValues[10]
-  print(params@other_params$other$kappa_scaling)
-
-  
-  params <- setParams(params)
-  
-  # Run the model
-  sim <- project(params, t_max = t_max, effort = effort)
-  
-  # Extract final biomasses
-  biomasses_through_time = getSSB(sim)
-  
-  
-  # Calculate SSE
-  sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
-  return(sse_final)
-}
-
 # Run model just inputting rMax
 runModelNormalizedf0 <- function(param_values, params, effort, t_max)
 {
@@ -269,8 +249,6 @@ runModelMultiOptim <- function(param_values, params, effort, t_max)
   params@species_params$erepro = 1 / (1 + exp(-(param_values[10:18])))
   params@other_params$other$kappa_scaling = exp(param_values[19])
   
-  print(params@species_params$f0)
-  print(params@other_params$other$kappa_scaling)
   params <- setParams(params)
   
   # Run the model
@@ -280,7 +258,7 @@ runModelMultiOptim <- function(param_values, params, effort, t_max)
   biomasses_through_time = getSSB(sim)
   
   # Calculate SSE
-  sse_final <- calculate_sse_time_series_normalized(obs_SSB, biomasses_through_time)
+  sse_final <- calculate_sse_time_series(obs_SSB, biomasses_through_time)
   return(sse_final)
 }
 
